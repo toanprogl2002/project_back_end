@@ -1,0 +1,51 @@
+Quản lý công việc
+1. Authentication
+    1. Đăng ký: tên, email, mật khẩu
+    2. Đăng nhập: email, mật khẩu
+    3. Quên mật khẩu:
+    4. Refresh Token
+    5. Đổi mật khẩu: mật khẩu cũ, mật khẩu mới, xác nhận mật khẩu
+    6. Logout
+    7. Lấy thông tin tài khoản
+2. Quản lý người dùng (admin)
+    1. Danh sách người dùng (có phân trang): có kèm bộ lọc (email)
+    2. Xem chi tiết thông tin người dùng: trả về toàn bộ thông tin người dùng
+    3. Xem danh sách các danh mục công việc của người dùng và danh sách công việc của người dùng theo mỗi danh mục: trả về danh sách các danh mục công việc của người dùng và trong mỗi danh mục công việc có chửa tất cả công việc thuộc danh mục đó
+    4. Reset password
+    5. Disable account: Vô hiệu hoá tk
+    6. Update quyền (user or admin): có 2 quyền chính và chỉ admin được xem dữ liệu phần “Quản lý người dùng”
+3. Quản lý danh mục công việc (user và admin)
+    1. Danh sách danh mục công việc (có phân trang): Hiển thì toàn bộ danh mục công việc của account hiện tại kèm bộ lọc (name)
+    2. Tạo mới danh mục công việc: tên danh mục (lưu kèm slug trong mỗi danh mục), mỗi danh mục trong mỗi user không được trùng tên
+    3. Cập nhật danh mục công việc: tên danh mục
+    4. Xoá danh mục công việc: chỉ xoá khi không có công việc nào trong danh mục này hoặc tất cả công việc đã hoàn thành
+4. Quản lý công việc (user và admin)
+    1. Danh sách công việc (có phân trang): tên công việc, tên danh mục, thời gian đề ra (ngày bắt đầu, ngày kết thúc), thời gian hoàn thành (ngày kết thúc), trạng thái
+    2. Thông tin chi tiết công việc: toàn bộ thông tin chi tiết về công việc
+    3. Đổi trang thái công việc: cập nhật trạng thái (chưa hoàn thành, đang thực hiện, đã hoàn thành)
+    4. Tạo mới công việc: tên công việc, slug, danh mục, thời gian đề ra
+    5. Cập nhật công việc: tên công việc, slug, danh mục, thời gian đề ra
+    6. Xoá công việc
+5. Báo cáo công việc (user và admin)
+    1. Xem báo cáo công việc tuần/tháng: Danh sách các công việc trong tuần hoặc tháng, số ngày hoàn thành, số ngày dự kiến
+    2. Xuất file excel báo cáo công việc tuần/tháng: Xuất thành file excel
+6. Thống kê công việc (admin)
+
+
+
+
+#### công việc research
+cơ chế tự động generate id của db, trong con voi, cơ chế new id() function, ssql server unique identify, new generate id () tự động tạo trong các cái cột, sate dèaut, tự động  id, tránh trùng lặp, check ra và làm mới,
+
+
+transaction đảm bảo tính toàn vẹn dữ lieu.
+
+authentication và outhorization (nhét vào cookie,)
+
+
+read fundamentals in nestjs doc
+
+
+exception filter
+
+CASCADE
