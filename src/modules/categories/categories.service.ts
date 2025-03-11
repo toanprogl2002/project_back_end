@@ -1,11 +1,20 @@
-import { ConflictException, forwardRef, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Category } from 'src/entities/category.entity';
-import { Repository } from 'typeorm';
-import { UsersService } from '../users/users.service';
-import { FindAllCategoryDto } from './dto/find_all.dto';
 import { generateSlug } from 'src/utils/generate_slug';
+import { Repository } from 'typeorm';
+
+import { UsersService } from '../users/users.service';
+
 import { CreateCategoryDto } from './dto/create_category.dto';
+import { FindAllCategoryDto } from './dto/find_all.dto';
 import { UpdateCategoryDto } from './dto/update_category.dto';
 
 @Injectable()
@@ -24,13 +33,12 @@ export class CategoriesService {
 
     query.where('category.deleted = :deleted', { deleted: false });
 
-
     if (categories.name) {
       query.where('category.name LIKE :name', { name: `%${categories.name}%` });
       return {
         data: await query.getOne(),
         message: 'Lấy danh sách người dùng thành công',
-      }
+      };
     }
 
     const [items, total] = await query
@@ -47,10 +55,10 @@ export class CategoriesService {
         size,
         next,
         total,
-        last_page
+        last_page,
       },
       message: 'Lấy danh sách người dùng thành công',
-      status: true
+      status: true,
     };
   }
 
@@ -68,12 +76,14 @@ export class CategoriesService {
       where: {
         userId: userId,
         name: createCategoryDto.name,
-        deleted: false
-      }
+        deleted: false,
+      },
     });
 
     if (existingCategory) {
-      throw new ConflictException('Danh mục với tên này đã tồn tại cho người dùng này');
+      throw new ConflictException(
+        'Danh mục với tên này đã tồn tại cho người dùng này',
+      );
     }
 
     const category = this.categoryRepository.create({
@@ -81,7 +91,7 @@ export class CategoriesService {
       slug: slug,
       userId: userId,
       status: 1,
-      createdBy: userId
+      createdBy: userId,
     });
 
     await this.categoryRepository.save(category);
@@ -89,12 +99,16 @@ export class CategoriesService {
     return {
       data: category,
       message: 'Tạo danh mục thành công',
-      status: true
+      status: true,
     };
   }
   // src/modules/categories/categories.service.ts
 
-  async findOne(categoryId: string, includeDeleted: boolean = false): Promise<Category> {
+
+  async findOne(
+    categoryId: string,
+    includeDeleted: boolean = false,
+  ): Promise<Category> {
     const whereCondition: any = { id: categoryId };
 
     if (!includeDeleted) {
@@ -102,14 +116,15 @@ export class CategoriesService {
     }
 
     const category = await this.categoryRepository.findOne({
-      where: whereCondition,
-      relations: ['tasks', 'user'], // Include both tasks and user relations
+      where: { id: categoryId },
+      // relations: ['tasks', 'user'], // Include both tasks and user relations
     });
 
     if (!category) {
-      throw new NotFoundException(`Danh mục với ID ${categoryId} không tồn tại`);
+      throw new NotFoundException(
+        `Danh mục với ID ${categoryId} không tồn tại`,
+      );
     }
-
     return category;
   }
 
@@ -117,8 +132,8 @@ export class CategoriesService {
     const category = await this.categoryRepository.findOne({
       where: {
         id: categoryId,
-        deleted: false
-      }
+        deleted: false,
+      },
     });
 
     if (!category) {
@@ -129,12 +144,14 @@ export class CategoriesService {
       where: {
         // userId: userId,
         name: updateCategoryDto.name,
-        deleted: false
-      }
+        deleted: false,
+      },
     });
 
     if (existingCategory && existingCategory.id !== categoryId) {
-      throw new ConflictException('Danh mục với tên này đã tồn tại cho người dùng này');
+      throw new ConflictException(
+        'Danh mục với tên này đã tồn tại cho người dùng này',
+      );
     }
 
     const slug = generateSlug(updateCategoryDto.name);
@@ -148,7 +165,7 @@ export class CategoriesService {
     return {
       data: category,
       message: 'Cập nhật danh mục thành công',
-      status: true
+      status: true,
     };
   }
 
@@ -156,9 +173,9 @@ export class CategoriesService {
     const category = await this.categoryRepository.findOne({
       where: {
         id: categoryId,
-        deleted: false
+        deleted: false,
       },
-      relations: ['tasks'] // Load tasks
+      relations: ['tasks'], // Load tasks
     });
 
     if (!category) {
@@ -173,11 +190,13 @@ export class CategoriesService {
 
     if (category.tasks && category.tasks.length > 0) {
       // Check if all tasks are completed
-      const hasIncompleteTasks = category.tasks.some(task => task.status !== 2); // 2 = completed
+      const hasIncompleteTasks = category.tasks.some(
+        (task) => task.status !== 2,
+      ); // 2 = completed
 
       if (hasIncompleteTasks) {
         throw new ConflictException(
-          'Không thể xóa danh mục này vì còn công việc chưa hoàn thành'
+          'Không thể xóa danh mục này vì còn công việc chưa hoàn thành',
         );
       }
     }
@@ -190,9 +209,7 @@ export class CategoriesService {
     return {
       data: category,
       message: 'Xóa danh mục thành công',
-      status: true
+      status: true,
     };
   }
-
-
 }

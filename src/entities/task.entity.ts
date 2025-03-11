@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+
 import { Category } from './category.entity';
 
 @Entity('tasks')
@@ -9,13 +16,15 @@ export class Task {
   @Column({ length: 255 })
   name: string;
 
-  @Column({ length: 255 })
+  @Column({ length: 255, unique: true })
   slug: string;
 
   @Column({ type: 'uuid', name: 'category_id' })
   category_id: string;
 
-  @ManyToOne(() => Category, (category) => category.tasks, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Category, (category) => category.tasks, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'category_id' })
   category: Category;
 
@@ -25,8 +34,8 @@ export class Task {
   @Column({ type: 'timestamp' })
   end_date: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
-  completed_date: Date;
+  @Column({ type: 'timestamp', nullable: true, name: 'completed_date' })
+  completed_date: Date | null;
 
   @Column({ type: 'int', default: 0 })
   status: number;

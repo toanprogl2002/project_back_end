@@ -5,7 +5,7 @@ export interface RequestWithUser extends Request {
   user: {
     userId: string;
     email: string;
-    role?: string;
+    role?: 'user' | 'admin';
     [key: string]: any;
   };
 }

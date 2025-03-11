@@ -1,23 +1,39 @@
-import { Controller, Get, Post, Put, Query, Param, UseGuards, Req, Body, ParseIntPipe, ValidationPipe, ParseUUIDPipe, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  ParseEnumPipe,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Put,
+  Query,
+  Req,
+  UseGuards,
+  ValidationPipe,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { RoleGuard } from './role.guard';
-import { UsersService } from './users.service';
+
 import { FindAllUserDto } from './dto/find_all_user.dto';
-import { CategoriesService } from '../categories/categories.service';
+import { UsersService } from './users.service';
+// import { RequestWithUser } from '../auth/auth';
+import { ResetPassDto } from './dto/reset_pass.dto';
+import { RoleGuard } from './role.guard';
+import { User } from './user.interface';
+import { UpdateRoleDto } from './dto/update-role.dto';
 import { RequestWithUser } from '../categories/requestPost';
 @Controller('users')
 // @UseGuards(AuthGuard('jwt'))
 export class UsersController {
-  constructor(
-    private readonly usersService: UsersService,
-  ) { }
+  constructor(private readonly usersService: UsersService) { }
 
   @Get()
   @UseGuards(AuthGuard('jwt'))
   // @UseGuards(RoleGuard)
-  async findAll(
-    @Query(ValidationPipe) findAllUserDto: FindAllUserDto
-  ) {
+  async findAll(@Query(ValidationPipe) findAllUserDto: FindAllUserDto) {
     return this.usersService.findAll(findAllUserDto);
   }
 
@@ -44,35 +60,32 @@ export class UsersController {
     return this.usersService.getUserWithCategoriesAndTasks(id);
   }
 
-  // @Post(':id/reset-password')
-  // @UseGuards(AuthGuard('jwt'))
-  // // @UseGuards(RoleGuard)
-  // async resetPassword(
-  //   @Param('id') id: string,
-  //   @Body("oldPassword") oldPassword: string,
-  //   @Body("newPassword") newPassword: string
-  // ): Promise<any> {
-  //   return this.usersService.resetPassword(id, oldPassword, newPassword);
-  // }
-
-  // @Put(':id/disable')
+  @Post(':id/reset-password')
+  @UseGuards(AuthGuard('jwt'))
   // @UseGuards(RoleGuard)
-  // async disableAccount(@Param('id') id: string) {
-  //   return this.usersService.disableAccount(id);
-  // }
+  async resetPassword(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(ValidationPipe) resetPassDto: ResetPassDto,
+    // @Req () req : RequestWithUser
+  ): Promise<any> {
+    return this.usersService.resetPassword(id, resetPassDto);
+  }
 
-  // @Put(':id/role')
+  @Patch(':id/disable')
   // @UseGuards(RoleGuard)
-  // async updateRole(
-  //   @Param('id') id: string,
-  //   @Query('role') role: 'user' | 'admin',
-  //   @Req() req
-  // ) {
-  //   return this.usersService.updateRole(id, role, req.user);
-  // }
+  @UseGuards(AuthGuard('jwt'))
+  async disableAccount(@Param('id') id: string) {
+    return this.usersService.disableAccount(id);
+  }
 
-  // @Get(':id/task-categories')
-  // async getUserTaskCategories(@Param('id') id: string) {
-  //   return this.usersService.getUserTaskCategories(id);
-  // }
+  @Patch('role')
+  // @UseGuards(RoleGuard)
+  @UseGuards(AuthGuard('jwt'))
+  async updateRole(
+    @Body(ValidationPipe) updateRole: UpdateRoleDto,
+    @Req() req: RequestWithUser
+  ) {
+    return this.usersService.updateRole(updateRole, req.user);
+  }
+
 }

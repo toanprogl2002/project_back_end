@@ -1,36 +1,41 @@
-import { UsersModule } from './modules/users/users.module';
-import { Module } from "@nestjs/common";
-import { AppController } from "./app.controller";
-import { AppService } from "./app.service";
+import { ExcelService } from './modules/reports/excel.service';
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { APP_FILTER } from '@nestjs/core';
+import { DevtoolsModule } from '@nestjs/devtools-integration';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { ThrottlerModule } from '@nestjs/throttler';
 // import { DatabaseModule } from './database/database.module';
 // import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 // import { APP_GUARD } from "@nestjs/core";
 import { DataSource } from 'typeorm';
+
+import { JWT_SECRET } from './config/secret';
+import { DatabaseModule } from './database/database.module';
+import { CatchEverythingFilter } from './exceptions/all-exceptions.filter';
 import { AuthModule } from './modules/auth/auth.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { TasksModule } from './modules/tasks/tasks.module';
-import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
-import { JWT_SECRET } from './config/secret';
-import { DatabaseModule } from './database/database.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule } from '@nestjs/config';
-import { JwtStrategy } from './config/jwt.strategy';
-import { ThrottlerModule } from '@nestjs/throttler';
-import { DevtoolsModule } from '@nestjs/devtools-integration';
+import { UsersModule } from './modules/users/users.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { ReportsModule } from './modules/reports/reports.module';
 
 @Module({
   imports: [
-    ThrottlerModule.forRoot([{
-      name: 'short',
-      ttl: 1000,
-      limit: 3,
-    },
-    {
-      name: 'long',
-      ttl: 60000,
-      limit: 3,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 1000,
+        limit: 3,
+      },
+      {
+        name: 'long',
+        ttl: 60000,
+        limit: 3,
+      },
+    ]),
     DevtoolsModule.register({
       http: process.env.NODE_ENV !== 'production',
     }),
@@ -49,11 +54,16 @@ import { DevtoolsModule } from '@nestjs/devtools-integration';
     CategoriesModule,
     TasksModule,
     DatabaseModule,
+    ReportsModule,
   ],
-  controllers: [
-    AppController
-  ],
-  providers: [AppService,
+  controllers: [AppController],
+  providers: [
+    ExcelService,
+    AppService,
+    {
+      provide: APP_FILTER,
+      useClass: CatchEverythingFilter,
+    },
     // JwtStrategy,
     // {
     //   provide: APP_GUARD,

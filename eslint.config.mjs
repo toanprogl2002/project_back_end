@@ -38,52 +38,52 @@ export default tseslint.config(
       '@typescript-eslint/unbound-method': 'warn',
       'no-console': 'warn',
       'no-undef': 'warn',
-      'no-unused-vars': 'warn',
+      'no-unused-vars': 'off',
       'no-var': 'warn',
       'prefer-const': 'warn',
       // 'prettier/prettier': 'warn',
-      "indent": ["error", "tab"],
-      "prettier/prettier": [
-      "error",
-      {
-        "singleQuote": true,
-        "parser": "flow",
-        "trailingComma": "all",
-        "usePrettierrc": false,
-        "tabWidth": 2,
-        "useTabs": true,
-        "semi": true,
-        "bracketSpacing": true,
-        "fileInfoOptions": {
-          "withNodeModules": true
-        }
-      },
-      {
-        "useTabs": false
-      }
-    ],
-     "simple-import-sort/exports": "error",
-        "simple-import-sort/imports": [
-          "error",
-          {
-            groups: [
-              // Packages `react` related packages come first.
-              // ["^react"],
-              // Other packages
-              // ["^@?\\w"],
-              // Internal packages.
-              ["^(@|components)(/.*|$)"],
-              // Side effect imports.
-              ["^\\u0000"],
-              // Parent imports. Put `..` last.
-              ["^\\.\\.(?!/?$)", "^\\.\\./?$"],
-              // Other relative imports. Put same-folder imports and `.` last.
-              ["^\\./(?=.*/)(?!/?$)", "^\\.(?!/?$)", "^\\./?$"],
-              // Style imports.
-              ["^.+\\.?(css)$"],
-            ],
+      indent: ['error', 'tab'],
+      'prettier/prettier': [
+        'error',
+        {
+          singleQuote: true,
+          parser: 'flow',
+          trailingComma: 'all',
+          usePrettierrc: false,
+          tabWidth: 2,
+          useTabs: true,
+          semi: true,
+          bracketSpacing: true,
+          fileInfoOptions: {
+            withNodeModules: true,
           },
-        ],
+        },
+        {
+          useTabs: false,
+        },
+      ],
+      'simple-import-sort/exports': 'error',
+      'simple-import-sort/imports': [
+        'error',
+        {
+          groups: [
+            // Packages `react` related packages come first.
+            // ["^react"],
+            // Other packages
+            // ["^@?\\w"],
+            // Internal packages.
+            ['^(@|components)(/.*|$)'],
+            // Side effect imports.
+            ['^\\u0000'],
+            // Parent imports. Put `..` last.
+            ['^\\.\\.(?!/?$)', '^\\.\\./?$'],
+            // Other relative imports. Put same-folder imports and `.` last.
+            ['^\\./(?=.*/)(?!/?$)', '^\\.(?!/?$)', '^\\./?$'],
+            // Style imports.
+            ['^.+\\.?(css)$'],
+          ],
+        },
+      ],
     },
   },
 );

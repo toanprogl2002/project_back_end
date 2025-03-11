@@ -1,11 +1,21 @@
-import { forwardRef, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
-import { User } from '../../entities/user.entity';
+import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { FindAllUserDto } from './dto/find_all_user.dto';
+import { User } from '../../entities/user.entity';
 import { CategoriesService } from '../categories/categories.service';
-import { Category } from 'src/entities/category.entity';
+
+import { FindAllUserDto } from './dto/find_all_user.dto';
+import { ResetPassDto } from './dto/reset_pass.dto';
+import { RequestWithUser } from '../categories/requestPost';
+import { UpdateRoleDto } from './dto/update-role.dto';
 
 @Injectable()
 export class UsersService {
@@ -22,9 +32,13 @@ export class UsersService {
     const size = findAllUserDto.size || 10;
     // console.log(query);
     if (findAllUserDto.email) {
-      query.where('user.email LIKE :email', { email: `%${findAllUserDto.email}%` });
+      query.where('user.email LIKE :email', {
+        email: `%${findAllUserDto.email}%`,
+      });
     }
+
     const [users, total] = await query
+      .andWhere('user.status = :status', { status: 1 })
       .skip((Number(page) - 1) * Number(size))
       .take(Number(size))
       .getManyAndCount();
@@ -38,17 +52,17 @@ export class UsersService {
         size,
         next,
         total,
-        last_page
+        last_page,
       },
       message: 'Lấy danh sách người dùng thành công',
-      status: true
+      status: true,
     };
   }
 
   async findOne(id: string) {
     const user = await this.usersRepository.findOne({
       where: { id },
-      relations: ['categories']
+      relations: ['categories'],
     });
     // this.categoriesService.findAll
     if (!user) {
@@ -60,8 +74,18 @@ export class UsersService {
   async getUserWithCategoriesAndTasks(id: string) {
     const user = await this.usersRepository
       .createQueryBuilder('user')
-      .leftJoinAndSelect('user.categories', 'category', 'category.deleted = :categoryDeleted', { categoryDeleted: false })
-      .leftJoinAndSelect('category.tasks', 'task', 'task.deleted = :taskDeleted', { taskDeleted: false })
+      .leftJoinAndSelect(
+        'user.categories',
+        'category',
+        'category.deleted = :categoryDeleted',
+        { categoryDeleted: false },
+      )
+      .leftJoinAndSelect(
+        'category.tasks',
+        'task',
+        'task.deleted = :taskDeleted',
+        { taskDeleted: false },
+      )
       .where('user.id = :id', { id })
       .getOne();
 
@@ -72,51 +96,61 @@ export class UsersService {
     return {
       data: user,
       message: 'Lấy thông tin người dùng thành công',
-      status: true
+      status: true,
     };
   }
 
+  async resetPassword(id: string, resetPassDto: ResetPassDto) {
+    const user = await this.findOne(id);
+    // const isPasswordValid = await bcrypt.compare(resetPassDto.oldPassword, user.password);
+    // if (!isPasswordValid) {
+    //   throw new UnauthorizedException('Mật khẩu cũ không đúng');
+    // }
+    user.password = await bcrypt.hash(resetPassDto.newPassword, 10);
+    await this.usersRepository.save(user);
+    return { message: 'Reset Password Thành Công', status: true };
+  }
 
-  // async resetPassword(id: string, password: string, newPassword: string) {
-  //   const user = await this.findOne(id);
-  //   const isPasswordValid = await bcrypt.compare(password, user.password);
-  //   if (!isPasswordValid) {
-  //     throw new UnauthorizedException('Mật khẩu cũ không đúng');
-  //   }
-  //   // const newPass = bcrypt.hash(newPassword, 10);
-  //   user.password = await bcrypt.hash(newPassword, 10);
-  //   await this.usersRepository.save(user);
-  //   return { message: 'Đổi mật khẩu thành công', };
-  // }
+  async disableAccount(id: string) {
+    const user = await this.findOne(id);
+    user.status = 0; // 0 = disabled, 1 = active
+    await this.usersRepository.update(id, user);
+    return { message: 'Tài khoản đã bị vô hiệu hóa', status: true };
+  }
 
-  // async disableAccount(id: string) {
-  //   const user = await this.findOne(id);
-  //   user.status = 0; // 0 = disabled, 1 = active
-  //   await this.usersRepository.save(user);
-  //   return { message: 'Tài khoản đã bị vô hiệu hóa' };
-  // }
+  async updateRole(updateRole: UpdateRoleDto, currentUser: {
+    userId: string;
+    email: string;
+    role?: 'user' | 'admin';
+  }) {
+    console.log('Current user from JWT:', currentUser);
 
-  // async updateRole(id: string, role: 2 | 1 , currentUser: User) {
-  //   if (currentUser.role !== 1) {
-  //     throw new UnauthorizedException('Chỉ admin mới có quyền thay đổi role');
-  //   }
+    if (currentUser.role !== 'admin') {
+      throw new ForbiddenException('Bạn không có quyền thay đổi vai trò người dùng');
+    }
 
-  //   const user = await this.findOne(id);
-  //   user.role = role;
-  //   await this.usersRepository.save(user);
-  //   return { message: 'Cập nhật quyền thành công' };
-  // }
+    const user = await this.usersRepository.findOne({
+      where: { id: updateRole.id, status: 1 },
+    });
 
-  // async getUserTaskCategories(userId: string) {
-  //   const user = await this.usersRepository.findOne({
-  //     where: { id: userId },
-  //     relations: ['taskCategories', 'taskCategories.tasks'],
-  //   });
+    if (!user) {
+      throw new NotFoundException('Người dùng không tồn tại');
+    }
 
-  //   if (!user) {
-  //     throw new NotFoundException('Người dùng không tồn tại');
-  //   }
+    user.role = updateRole.role;
+    user.modifiedDate = new Date();
+    user.modifiedBy = currentUser.userId;
 
-  //   return user.taskCategories;
-  // }
+    await this.usersRepository.save(user);
+
+    return {
+      data: {
+        id: user.id,
+        email: user.email,
+        role: user.role
+      },
+      message: `Đã cập nhật vai trò thành ${updateRole.role}`,
+      status: true
+    };
+  }
 }

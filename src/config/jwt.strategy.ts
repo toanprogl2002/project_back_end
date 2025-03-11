@@ -1,12 +1,13 @@
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PassportStrategy } from '@nestjs/passport';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { PassportStrategy } from '@nestjs/passport';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/entities/user.entity';
-import { Repository } from 'typeorm';
-import { JWT_SECRET } from './secret';
 import { Request } from 'express';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import { User } from 'src/entities/user.entity';
 import { AuthService } from 'src/modules/auth/auth.service';
+import { Repository } from 'typeorm';
+
+import { JWT_SECRET } from './secret';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -14,7 +15,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     @Inject(AuthService)
-    private AuthService: AuthService
+    private AuthService: AuthService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -40,7 +41,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     // 4. Kiểm tra user tồn tại
     const user = await this.usersRepository.findOne({
-      where: { id: payload.sub }
+      where: { id: payload.sub },
     });
 
     if (!user) {
@@ -51,7 +52,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return {
       userId: payload.sub,
       email: payload.email,
-      role: user.role as 'user' | 'admin'
+      role: user.role,
     };
   }
 }
