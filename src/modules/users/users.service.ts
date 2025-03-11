@@ -48,13 +48,32 @@ export class UsersService {
   async findOne(id: string) {
     const user = await this.usersRepository.findOne({
       where: { id },
-      // relations: ['categories']
+      relations: ['categories']
     });
     // this.categoriesService.findAll
     if (!user) {
       throw new NotFoundException('User not found');
     }
     return user;
+  }
+
+  async getUserWithCategoriesAndTasks(id: string) {
+    const user = await this.usersRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.categories', 'category', 'category.deleted = :categoryDeleted', { categoryDeleted: false })
+      .leftJoinAndSelect('category.tasks', 'task', 'task.deleted = :taskDeleted', { taskDeleted: false })
+      .where('user.id = :id', { id })
+      .getOne();
+
+    if (!user) {
+      throw new NotFoundException('Người dùng không tồn tại');
+    }
+
+    return {
+      data: user,
+      message: 'Lấy thông tin người dùng thành công',
+      status: true
+    };
   }
 
 

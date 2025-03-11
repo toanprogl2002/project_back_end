@@ -32,7 +32,7 @@ export class AuthService {
       password: hashedPassword,
     });
     await this.usersRepository.save(user);
-    return { message: 'Đăng ký thành công' };
+    return { message: 'Đăng ký thành công', status: 201 };
   }
 
   async login(loginDto: LoginDto) {

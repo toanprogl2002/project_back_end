@@ -53,7 +53,7 @@ export class AuthController {
   async logout(@Req() req: RequestWithUser) {
     try {
       const token = req.headers.authorization?.split(' ')[1]; // Lấy token từ header
-      return this.authService.logout(req.user.sub, token);
+      return this.authService.logout(req.user.userId, token);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new UnauthorizedException('Người dùng không tồn tại');

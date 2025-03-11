@@ -1,9 +1,11 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Query, Req, UseGuards, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query, Req, UseGuards, ValidationPipe } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { CategoriesService } from './categories.service';
 import { FindAllCategoryDto } from './dto/find_all.dto';
 import { CreateCategoryDto } from './dto/create_category.dto';
 import { UpdateCategoryDto } from './dto/update_category.dto';
+import { Request } from 'express';
+import { RequestWithUser } from './requestPost';
 
 @Controller('categories')
 export class CategoriesController {
@@ -20,12 +22,13 @@ export class CategoriesController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Get(':id')
+  @Post()
   async create(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body(ValidationPipe) body: CreateCategoryDto
+    @Body(ValidationPipe) body: CreateCategoryDto,
+    @Req() req: RequestWithUser
   ) {
-    return this.categoriesService.create(id, body);
+    const userId = req.user.userId;
+    return this.categoriesService.create(userId, body);
   }
 
   @UseGuards(AuthGuard('jwt'))

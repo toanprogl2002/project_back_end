@@ -22,6 +22,9 @@ export class CategoriesService {
     const page = categories.page || 1;
     const size = categories.size || 10;
 
+    query.where('category.deleted = :deleted', { deleted: false });
+
+
     if (categories.name) {
       query.where('category.name LIKE :name', { name: `%${categories.name}%` });
       return {
@@ -30,15 +33,15 @@ export class CategoriesService {
       }
     }
 
-    const [users, total] = await query
-      .skip((Number(page) - 1) * Number(size))
-      .take(Number(size))
+    const [items, total] = await query
+      .skip((page - 1) * size)
+      .take(size)
       .getManyAndCount();
-    const next = Number(page) * Number(size) < total;
-    const last_page = Math.ceil(total / Number(size));
+    const next = page * size < total;
+    const last_page = Math.ceil(total / size);
 
     return {
-      data: users,
+      data: items,
       metadata: {
         page,
         size,
@@ -54,7 +57,7 @@ export class CategoriesService {
   async create(userId: string, createCategoryDto: CreateCategoryDto) {
     // Check if user exists
     const user = await this.usersService.findOne(userId);
-    if (!user) {
+    if (!user || user.deleted) {
       throw new NotFoundException('Người dùng không tồn tại');
     }
 
@@ -88,6 +91,26 @@ export class CategoriesService {
       message: 'Tạo danh mục thành công',
       status: true
     };
+  }
+  // src/modules/categories/categories.service.ts
+
+  async findOne(categoryId: string, includeDeleted: boolean = false): Promise<Category> {
+    const whereCondition: any = { id: categoryId };
+
+    if (!includeDeleted) {
+      whereCondition.deleted = false;
+    }
+
+    const category = await this.categoryRepository.findOne({
+      where: whereCondition,
+      relations: ['tasks', 'user'], // Include both tasks and user relations
+    });
+
+    if (!category) {
+      throw new NotFoundException(`Danh mục với ID ${categoryId} không tồn tại`);
+    }
+
+    return category;
   }
 
   async update(categoryId: string, updateCategoryDto: UpdateCategoryDto) {
@@ -162,7 +185,7 @@ export class CategoriesService {
     category.deletedDate = new Date();
     category.deletedBy = userId.id;
 
-    await this.categoryRepository.update(categoryId, category);
+    await this.categoryRepository.save(category);
 
     return {
       data: category,
