@@ -27,15 +27,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(req: Request, payload: any) {
     // 1. Kiểm tra nếu là refresh token
-    if (payload.type === 'refresh') {
-      throw new UnauthorizedException('Invalid token type');
+    if (!payload.type || payload.type !== 'access') {
+      throw new UnauthorizedException('Invalid token type - access token required');
     }
 
     // 2. Lấy token từ request header
     const token = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
 
-    // 3. Kiểm tra token có trong blacklist không
-    if (token && this.AuthService.isTokenBlacklisted(token)) {
+    // 3. Kiểm tra token có trong blacklist không (dùng Redis)
+    if (token && await this.AuthService.isTokenBlacklisted(token)) {
       throw new UnauthorizedException('Token has been revoked');
     }
 
@@ -43,7 +43,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const user = await this.usersRepository.findOne({
       where: { id: payload.sub },
     });
-
     if (!user) {
       throw new UnauthorizedException('User not found');
     }

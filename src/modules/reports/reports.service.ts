@@ -154,12 +154,8 @@ export class ReportsService {
       // End of month
       end = new Date(start.getFullYear(), start.getMonth() + 1, 0, 23, 59, 59, 999);
     }
-
     return { start, end };
   }
-
-  // src/modules/reports/reports.service.ts
-  // Add this method to your existing ReportsService class
 
   async getAdminStatistics(period: StatisticsPeriod, startDate?: string, endDate?: string): Promise<any> {
 
@@ -298,13 +294,13 @@ export class ReportsService {
     // }
 
     // Get this week's and month's dates for comparison
-    const today = new Date();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay()); // Sunday
-    startOfWeek.setHours(0, 0, 0, 0);
+    // const today = new Date();
+    // const startOfWeek = new Date(today);
+    // startOfWeek.setDate(today.getDate() - today.getDay()); // Sunday
+    // startOfWeek.setHours(0, 0, 0, 0);
 
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    startOfMonth.setHours(0, 0, 0, 0);
+    // const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    // startOfMonth.setHours(0, 0, 0, 0);
 
     // Count tasks completed and added recently
     // tasks.forEach(task => {
@@ -353,7 +349,6 @@ export class ReportsService {
           byStatus: tasksByStatus,
           byCategory: Object.values(tasksByCategory)
         },
-        // timeMetrics
       },
       message: 'Thống kê công việc thành công',
       status: true

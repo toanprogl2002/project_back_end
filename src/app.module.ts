@@ -11,7 +11,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 // import { APP_GUARD } from "@nestjs/core";
 import { DataSource } from 'typeorm';
 
-import { JWT_SECRET } from './config/secret';
+// import { JWT_SECRET } from './config/secret';
 import { DatabaseModule } from './database/database.module';
 import { CatchEverythingFilter } from './exceptions/all-exceptions.filter';
 import { AuthModule } from './modules/auth/auth.module';
@@ -21,9 +21,14 @@ import { UsersModule } from './modules/users/users.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ReportsModule } from './modules/reports/reports.module';
-
+import { RedisModule } from '@nestjs-modules/ioredis'
+require('dotenv').config();
 @Module({
   imports: [
+    RedisModule.forRoot({
+      type: 'single',
+      url: 'redis://localhost:6379',
+    }),
     ThrottlerModule.forRoot([
       {
         name: 'short',
@@ -45,7 +50,7 @@ import { ReportsModule } from './modules/reports/reports.module';
     }),
     JwtModule.register({
       global: true, // Make JWT module global
-      secret: JWT_SECRET,
+      secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '60m' },
     }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -58,7 +63,7 @@ import { ReportsModule } from './modules/reports/reports.module';
   ],
   controllers: [AppController],
   providers: [
-    ExcelService,
+    // ExcelService,
     AppService,
     {
       provide: APP_FILTER,
