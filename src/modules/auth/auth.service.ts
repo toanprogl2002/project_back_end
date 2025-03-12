@@ -172,9 +172,6 @@ export class AuthService {
     return;
   }
 
-  // isTokenBlacklisted(token: string): boolean {
-  //   return this.tokenBlacklist.has(token);
-  // }
   async isTokenBlacklisted(token: string): Promise<boolean> {
     const result = await this.redis.get(token);
     return result === 'blacklisted';
