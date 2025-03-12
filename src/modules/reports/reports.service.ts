@@ -1,13 +1,12 @@
 // src/modules/reports/reports.service.ts
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 import { Task } from '../../entities/task.entity';
 import { Category } from '../../entities/category.entity';
 import { User } from '../../entities/user.entity';
 import { ReportPeriod } from './dto/report-request.dto';
-// import { ReportPeriod } from './dto/report-request.dto';
-// import { ExcelService } from '../shared/services/excel.service';
+import { ExcelService } from './excel.service';
 
 @Injectable()
 export class ReportsService {
@@ -16,9 +15,10 @@ export class ReportsService {
     private taskRepository: Repository<Task>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    @InjectRepository(Category)
-    private categoryRepository: Repository<Category>,
-    // private excelService: ExcelService,
+    // @InjectRepository(Category)
+    // private categoryRepository: Repository<Category>,
+    // @Inject(forwardRef(() => ExcelService))
+    private readonly excelService: ExcelService
   ) { }
   private getStatusLabel(status: number): string {
     switch (status) {
@@ -33,29 +33,47 @@ export class ReportsService {
     }
   }
 
+  async generateExcelReport(period: ReportPeriod, startDate?: string, userId?: string): Promise<Buffer> {
+    const report = await this.getTaskReport(period, startDate, userId);
+    // console.log('ExcelService instance:', this.excelService);
+    // console.log('Available methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.excelService)));
+
+    return this.excelService.generateTaskReport(
+      report.data.tasks,
+      period,
+      report.data.startDate
+    );
+  }
+
   async getTaskReport(period: ReportPeriod, startDate?: string, userId?: string): Promise<any> {
-    // Calculate the date range based on period
+    // Kiểm tra userId hợp lệ
+    const user = await this.userRepository.findOne({ where: { id: userId, deleted: false } });
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy người dùng');
+    }
+
+    // Tính toán khoảng thời gian
     const { start, end } = this.calculateDateRange(period, startDate);
 
-    // Build query
+    // Xây dựng truy vấn
     const query = this.taskRepository.createQueryBuilder('task')
       .leftJoinAndSelect('task.category', 'category')
       .where('task.deleted = :deleted', { deleted: false })
       .andWhere('task.start_date >= :startDate', { startDate: start })
       .andWhere('task.start_date <= :endDate', { endDate: end });
 
-    // Filter by user if provided
-    if (userId) {
-      query.andWhere('task.userId = :userId', { userId });
+    // Lọc nhiệm vụ theo vai trò người dùng
+    if (user.role !== 'admin') {
+      query.andWhere('category.user_id = :userId', { userId });
     }
 
-    // Get tasks
+    // Lấy danh sách nhiệm vụ
     const tasks = await query
       .orderBy('task.start_date', 'ASC')
       .addOrderBy('category.name', 'ASC')
       .getMany();
 
-    // Calculate metrics for the report
+    // Tính toán thống kê
     const completedTasks = tasks.filter(task => task.status === 2).length;
     const onTimeTasks = tasks.filter(task =>
       task.status === 2 &&
@@ -69,7 +87,7 @@ export class ReportsService {
       new Date(task.end_date) < new Date()
     ).length;
 
-    // Format the tasks for the response
+    // Định dạng nhiệm vụ
     const formattedTasks = tasks.map(task => ({
       id: task.id,
       name: task.name,
@@ -90,7 +108,7 @@ export class ReportsService {
         Math.ceil((new Date(task.end_date).getTime() - new Date(task.start_date).getTime()) / (1000 * 60 * 60 * 24)) : null
     }));
 
-    // Return the report data
+    // Trả về báo cáo
     return {
       data: {
         period: period,
@@ -102,23 +120,14 @@ export class ReportsService {
           completedTasks,
           onTimeTasks,
           overdueTasks,
-          completionRate: tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0,
-          onTimeRate: completedTasks > 0 ? (onTimeTasks / completedTasks) * 100 : 0
+          completionRate: tasks.length > 0 ? parseFloat((completedTasks / tasks.length).toFixed(2)) * 100 : 0,
+          onTimeRate: completedTasks > 0 ? parseFloat((completedTasks / tasks.length).toFixed(2)) * 100 : 0
         }
       },
       message: `Báo cáo công việc ${period === ReportPeriod.WEEK ? 'tuần' : 'tháng'} thành công`,
       status: true
     };
   }
-
-  // async generateExcelReport(period: ReportPeriod, startDate?: string, userId?: string): Promise<Buffer> {
-  //   const report = await this.getTaskReport(period, startDate, userId);
-  //   return this.excelService.generateTaskReport(
-  //     report.data.tasks,
-  //     period,
-  //     report.data.startDate
-  //   );
-  // }
 
   private calculateDateRange(period: ReportPeriod, customStartDate?: string): { start: Date, end: Date } {
     let start = customStartDate ? new Date(customStartDate) : new Date();
@@ -127,19 +136,14 @@ export class ReportsService {
     // Reset to start of day
     start.setHours(0, 0, 0, 0);
 
-    // If no custom date, adjust to start of current week/month
     if (!customStartDate) {
       if (period === ReportPeriod.WEEK) {
-        // Get to the start of the week (Sunday = 0, Monday = 1, etc.)
         const day = start.getDay();
         start.setDate(start.getDate() - day); // Go back to Sunday
       } else {
-        // Get to the start of the month
         start.setDate(1);
       }
     }
-
-    // Calculate end date based on period
     if (period === ReportPeriod.WEEK) {
       // End of week (start + 6 days)
       end = new Date(start);
@@ -152,20 +156,5 @@ export class ReportsService {
 
     return { start, end };
   }
-
-  //   // Calculate end date based on period
-  //   if (period === ReportPeriod.WEEK) {
-  //     // End of week (start + 6 days)
-  //     end = new Date(start);
-  //     end.setDate(end.getDate() + 6);
-  //     end.setHours(23, 59, 59, 999);
-  //   } else {
-  //     // End of month
-  //     end = new Date(start.getFullYear(), start.getMonth() + 1, 0, 23, 59, 59, 999);
-  //   }
-
-  //   return { start, end };
-  // }
-
 
 }

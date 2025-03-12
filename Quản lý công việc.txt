@@ -32,8 +32,6 @@ Quản lý công việc
 6. Thống kê công việc (admin)
 
 
-
-
 #### công việc research
 cơ chế tự động generate id của db, trong con voi, cơ chế new id() function, ssql server unique identify, new generate id () tự động tạo trong các cái cột, sate dèaut, tự động  id, tránh trùng lặp, check ra và làm mới,
 

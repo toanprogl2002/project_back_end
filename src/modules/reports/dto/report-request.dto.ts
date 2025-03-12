@@ -1,5 +1,5 @@
 // src/modules/reports/dto/report-request.dto.ts
-import { IsEnum, IsISO8601, IsOptional, IsUUID } from 'class-validator';
+import { IsEnum, IsISO8601, IsOptional, IsString, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum ReportPeriod {
@@ -11,13 +11,12 @@ export enum ReportFormat {
   JSON = 'json',
   EXCEL = 'excel',
 }
-
 export class ReportRequestDto {
   @IsEnum(ReportPeriod, { message: 'Period must be either "week" or "month"' })
   period: ReportPeriod;
 
-  @IsISO8601({}, { message: 'Start date must be a valid ISO 8601 date string' })
   @IsOptional()
+  @IsString()
   startDate?: string;
 
   @IsOptional()

@@ -5,12 +5,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Task } from 'src/entities/task.entity';
 import { Category } from 'src/entities/category.entity';
 import { User } from 'src/entities/user.entity';
+import e from 'express';
+import { ExcelService } from './excel.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Task, Category, User])
   ],
-  providers: [ReportsService],
+  providers: [ReportsService,
+    ExcelService],
   controllers: [ReportsController],
   exports: [ReportsService]
 })
