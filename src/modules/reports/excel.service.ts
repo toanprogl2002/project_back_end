@@ -33,6 +33,7 @@ export class ExcelService {
 
     worksheet.getRow(2).eachCell((cell) => {
       cell.font = { bold: true };
+      cell.alignment = { horizontal: 'center' };
       cell.fill = {
         type: 'pattern',
         pattern: 'solid',

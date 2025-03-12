@@ -6,6 +6,7 @@ import { ReportsService } from './reports.service';
 import { ReportRequestDto, ReportFormat, ReportPeriod } from './dto/report-request.dto';
 import { Transform } from 'class-transformer';
 import { RequestWithUser } from '../categories/requestPost';
+import { StatisticsPeriod, StatisticsRequestDto } from './dto/status.dto';
 // import { RolesGuard } from '../shared/guards/roles.guard';
 // import { Roles } from '../shared/decorators/roles.decorator';
 
@@ -60,46 +61,32 @@ export class ReportsController {
     });
     res.end(buffer);
   }
+  // src/modules/admin/admin-statistics.controller.ts
+  @Get('admin/statistics')
+  async getStatistics(
+    @Query() statisticsDto: StatisticsRequestDto,
+    @Req() req: RequestWithUser
+  ) {
+    const period = statisticsDto.period || StatisticsPeriod.MONTH;
+    if (req.user.role !== 'admin') {
+      throw new NotAcceptableException('Only admin can access this endpoint');
+    }
 
-  // @Get('admin/tasks')
-  // // @UseGuards(RolesGuard)
-  // // @Roles('admin')
-  // async getAdminTaskReport(
-  //   @Query() reportDto: ReportRequestDto
-  // ) {
-  //   return this.reportsService.getTaskReport(
-  //     reportDto.period,
-  //     reportDto.startDate,
-  //     reportDto.userId // Allow admin to see any user's report
-  //   );
-  // }
+    let startDate = statisticsDto.startDate;
+    let endDate = statisticsDto.endDate;
 
-  // @Get('admin/tasks/excel')
-  // // @UseGuards(RolesGuard)
-  // // @Roles('admin')
-  // async getAdminTaskReportExcel(
-  //   @Query() reportDto: ReportRequestDto,
-  //   @Res() res: Response
-  // ) {
-  //   const period = reportDto.period || ReportPeriod.WEEK;
-  //   const periodName = period === ReportPeriod.WEEK ? 'tuan' : 'thang';
-  //   const date = reportDto.startDate ?
-  //     new Date(reportDto.startDate).toISOString().split('T')[0] :
-  //     new Date().toISOString().split('T')[0];
+    if (period === StatisticsPeriod.DATE && !startDate) {
+      const today = new Date();
+      startDate = today.toISOString().split('T')[0];
 
-  //   const userIdSuffix = reportDto.userId ? `-user-${reportDto.userId.substring(0, 8)}` : '';
+      endDate = startDate;
+    }
 
-  //   const buffer = await this.reportsService.generateExcelReport(
-  //     period,
-  //     reportDto.startDate,
-  //     reportDto.userId
-  //   );
+    return this.reportsService.getAdminStatistics(
+      period,
+      startDate,
+      endDate
+    );
+  }
 
-  //   res.set({
-  //     'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  //     'Content-Disposition': `attachment; filename="bao-cao-${periodName}-${date}${userIdSuffix}.xlsx"`,
-  //     'Content-Length': buffer.length,
-  //   });
-
-  //   res.end(buffer);
 }
