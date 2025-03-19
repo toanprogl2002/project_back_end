@@ -1,89 +1,30 @@
-// @ts-check
-import eslint from '@eslint/js';
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
-import globals from 'globals';
-import tseslint from 'typescript-eslint';
+module.exports = {
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    project: 'tsconfig.json',
+    tsconfigRootDir: __dirname,
+    sourceType: 'module',
+  },
+  plugins: ['@typescript-eslint/eslint-plugin', 'import', 'simple-import-sort'],
+  extends: [
+    'plugin:@typescript-eslint/recommended',
+    'plugin:prettier/recommended',
+  ],
+  root: true,
+  env: {
+    node: true,
+    jest: true,
+  },
+  ignorePatterns: ['.eslintrc.js'],
+  rules: {
+    '@typescript-eslint/interface-name-prefix': 'off',
+    '@typescript-eslint/explicit-function-return-type': 'off',
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
 
-export default tseslint.config(
-  {
-    ignores: ['eslint.config.mjs'],
+    'import/no-cycle': 2,
+
+    'simple-import-sort/imports': 'error',
+    'simple-import-sort/exports': 'error',
   },
-  eslint.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
-  eslintPluginPrettierRecommended,
-  {
-    languageOptions: {
-      globals: {
-        ...globals.node,
-        ...globals.jest,
-      },
-      ecmaVersion: 5,
-      sourceType: 'module',
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
-  },
-  {
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn',
-      '@typescript-eslint/no-unsafe-assignment': 'warn',
-      '@typescript-eslint/no-unsafe-call': 'warn',
-      '@typescript-eslint/no-unsafe-member-access': 'warn',
-      '@typescript-eslint/no-unsafe-return': 'warn',
-      '@typescript-eslint/restrict-template-expressions': 'warn',
-      '@typescript-eslint/unbound-method': 'warn',
-      'no-console': 'warn',
-      'no-undef': 'warn',
-      'no-unused-vars': 'off',
-      'no-var': 'warn',
-      'prefer-const': 'warn',
-      // 'prettier/prettier': 'warn',
-      indent: ['error', 'tab'],
-      'prettier/prettier': [
-        'error',
-        {
-          singleQuote: true,
-          parser: 'flow',
-          trailingComma: 'all',
-          usePrettierrc: false,
-          tabWidth: 2,
-          useTabs: true,
-          semi: true,
-          bracketSpacing: true,
-          fileInfoOptions: {
-            withNodeModules: true,
-          },
-        },
-        {
-          useTabs: false,
-        },
-      ],
-      'simple-import-sort/exports': 'error',
-      'simple-import-sort/imports': [
-        'error',
-        {
-          groups: [
-            // Packages `react` related packages come first.
-            // ["^react"],
-            // Other packages
-            // ["^@?\\w"],
-            // Internal packages.
-            ['^(@|components)(/.*|$)'],
-            // Side effect imports.
-            ['^\\u0000'],
-            // Parent imports. Put `..` last.
-            ['^\\.\\.(?!/?$)', '^\\.\\./?$'],
-            // Other relative imports. Put same-folder imports and `.` last.
-            ['^\\./(?=.*/)(?!/?$)', '^\\.(?!/?$)', '^\\./?$'],
-            // Style imports.
-            ['^.+\\.?(css)$'],
-          ],
-        },
-      ],
-    },
-  },
-);
+};
