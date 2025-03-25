@@ -1,6 +1,8 @@
+import { LoggerModule } from './system/log/logger.module';
+import { ConfigModule } from '@/system/config';
 import { ExcelService } from './modules/reports/excel.service';
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+// import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER } from '@nestjs/core';
 import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { JwtModule } from '@nestjs/jwt';
@@ -18,57 +20,55 @@ import { AuthModule } from './modules/auth/auth.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { UsersModule } from './modules/users/users.module';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ReportsModule } from './modules/reports/reports.module';
 import { RedisModule } from '@nestjs-modules/ioredis'
-require('dotenv').config();
 @Module({
   imports: [
-    RedisModule.forRoot({
-      type: 'single',
-      url: 'redis://localhost:6379',
-    }),
-    ThrottlerModule.forRoot([
-      {
-        name: 'short',
-        ttl: 1000,
-        limit: 3,
-      },
-      {
-        name: 'long',
-        ttl: 60000,
-        limit: 3,
-      },
-    ]),
-    DevtoolsModule.register({
-      http: process.env.NODE_ENV !== 'production',
-    }),
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
-    }),
-    JwtModule.register({
-      global: true, // Make JWT module global
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '60m' },
-    }),
-    PassportModule.register({ defaultStrategy: 'jwt' }),
-    UsersModule,
-    AuthModule,
-    CategoriesModule,
-    TasksModule,
-    DatabaseModule,
-    ReportsModule,
+    LoggerModule,
+    ConfigModule,
+    // RedisModule.forRoot({
+    //   type: 'single',
+    //   url: 'redis://localhost:6379',
+    // }),
+    // ThrottlerModule.forRoot([
+    //   {
+    //     name: 'short',
+    //     ttl: 1000,
+    //     limit: 3,
+    //   },
+    //   {
+    //     name: 'long',
+    //     ttl: 60000,
+    //     limit: 3,
+    //   },
+    // ]),
+    // DevtoolsModule.register({
+    //   http: process.env.NODE_ENV !== 'production',
+    // }),
+    // ConfigModule.forRoot({
+    //   isGlobal: true,
+    //   envFilePath: '.env',
+    // }),
+    // JwtModule.register({
+    //   global: true, // Make JWT module global
+    //   secret: process.env.JWT_SECRET,
+    //   signOptions: { expiresIn: '60m' },
+    // }),
+    // PassportModule.register({ defaultStrategy: 'jwt' }),
+    // UsersModule,
+    // AuthModule,
+    // CategoriesModule,
+    // TasksModule,
+    // DatabaseModule,
+    // ReportsModule,
   ],
-  controllers: [AppController],
+  controllers: [],
   providers: [
     // ExcelService,
-    AppService,
-    {
-      provide: APP_FILTER,
-      useClass: CatchEverythingFilter,
-    },
+    // {
+    //   provide: APP_FILTER,
+    //   useClass: CatchEverythingFilter,
+    // },
     // JwtStrategy,
     // {
     //   provide: APP_GUARD,
@@ -77,5 +77,5 @@ require('dotenv').config();
   ],
 })
 export class AppModule {
-  constructor(private dataSource: DataSource) { }
+  // constructor(private dataSource: DataSource) { }
 }

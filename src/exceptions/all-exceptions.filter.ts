@@ -14,7 +14,7 @@ export class CatchEverythingFilter implements ExceptionFilter {
 
   constructor(private readonly httpAdapterHost: HttpAdapterHost) { }
 
-  catch(exception: unknown, host: ArgumentsHost): void {
+  catch(exception: unknown, host: ArgumentsHost) {
     // Get the HTTP adapter
     const { httpAdapter } = this.httpAdapterHost;
 
