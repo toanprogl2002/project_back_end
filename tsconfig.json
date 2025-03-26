@@ -25,7 +25,8 @@
       "@system/*": ["src/system/*"],
       "@config/*": ["src/config/*"],
       "@utils/*": ["src/utils/*"],
-      "@constants/*": ["src/constants/*"]
+      "@constants/*": ["src/constants/*"],
+      "@database/*": ["src/database/*"]
     }
   }
 }

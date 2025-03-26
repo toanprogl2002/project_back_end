@@ -1,13 +1,13 @@
 import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Task } from 'src/entities/task.entity';
+import { Task } from '@/database/entities/task.entity';
 import { Repository } from 'typeorm';
 
 import { CreateTaskDto } from './dto/create-task.dto';
 import { FindAllTasksDto } from './dto/find_all.dto';
 import { UpdateTaskStatusDto } from './dto/update_task_status.dto';
 import { generateSlug } from 'src/utils/generate_slug';
-import { Category } from 'src/entities/category.entity';
+import { Category } from '@/database/entities/category.entity';
 import { CategoriesService } from '../categories/categories.service';
 import { UpdateTaskDto } from './dto/update-task.dto';
 

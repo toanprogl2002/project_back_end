@@ -7,7 +7,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Category } from 'src/entities/category.entity';
+import { Category } from '@/database/entities/category.entity';
 import { generateSlug } from 'src/utils/generate_slug';
 import { Repository } from 'typeorm';
 

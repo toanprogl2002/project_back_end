@@ -12,6 +12,7 @@ import { AppConfig } from './config';
 import { LoggerService } from './system/log';
 import { TypeORMExceptionFilter } from './system/dbs/exceptions';
 import { AllExceptionFilter } from '@system/filters';
+import { createSwaggerDocument } from './swagger';
 require('dotenv').config();
 
 async function bootstrap() {
@@ -54,13 +55,24 @@ async function bootstrap() {
     new AllExceptionFilter(_http),
   );
 
-  // app.useGlobalPipes(new ValidationPipe({
-  //   transform: true,
-  //   whitelist: true,
-  //   exceptionFactory: (errors: ValidationError[]) =>
-  //     new ValidationException(null, errors),
-  // }));
-  // await app.listen(process.env.PORT ?? 3000);
+  app.useGlobalPipes(new ValidationPipe({
+    transform: true,
+    whitelist: true,
+    exceptionFactory: (errors: ValidationError[]) =>
+      new ValidationException(null, errors),
+  }));
+
+  if (_app_config.getApiDocument()) {
+    createSwaggerDocument(app);
+  }
+
+  const port = _app_config.getPort();
+  const host = _app_config.getHost();
+
+  await app.listen(port, host, () => {
+    _logger.log(`Application listen in ${port}`, 'Application');
+  });
+
 }
 
 void bootstrap();

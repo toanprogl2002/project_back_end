@@ -1,9 +1,6 @@
 // import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 // import { Category } from "./category.entity";
 
-
-
-
 // @Entity('reports')
 // export class Report {
 //   @PrimaryGeneratedColumn('uuid')

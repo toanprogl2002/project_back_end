@@ -2,9 +2,9 @@
 import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
-import { Task } from '../../entities/task.entity';
-import { Category } from '../../entities/category.entity';
-import { User } from '../../entities/user.entity';
+import { Task } from '../../database/entities/task.entity';
+import { Category } from '../../database/entities/category.entity';
+import { User } from '../../database/entities/user.entity';
 import { ReportPeriod } from './dto/report-request.dto';
 import { ExcelService } from './excel.service';
 import { StatisticsPeriod } from './dto/status.dto';

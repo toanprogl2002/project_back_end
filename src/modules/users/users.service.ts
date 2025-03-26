@@ -9,7 +9,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from '../../entities/user.entity';
+import { User } from '../../database/entities/user.entity';
 import { CategoriesService } from '../categories/categories.service';
 
 import { FindAllUserDto } from './dto/find_all_user.dto';
