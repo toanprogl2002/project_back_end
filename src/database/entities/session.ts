@@ -33,11 +33,18 @@ export class Session {
   //#endregion
 
   //#region RELATIONS
-  @ManyToOne(() => User, (us) => us.id, {
-    onDelete: 'CASCADE',
-    orphanedRowAction: 'delete',
-  })
-  @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
-  user!: Relation<User>;
-  //#endregion
+  // @ManyToOne(() => User, (user) => user.sessions,
+  //   {
+  //     onDelete: 'CASCADE',
+  //     lazy: true
+  //   })
+  // @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
+  // user!: Relation<User>;
+
+  // @ManyToOne(() => User, (user) => user.sessions, {
+  //   onDelete: 'CASCADE',
+  // })
+  // @JoinColumn({ name: 'user_id' })
+  // user!: User;
+  // //#endregion
 }

@@ -27,7 +27,7 @@ import { isProduction } from '@/utils/env';
         subscribers: [
           join(__dirname, '../../database/subscribers/**/*.subscriber{.ts,.js}'),],
         ssl: false,
-        logging: !isProduction(),
+        logging: true,
         cache: {
           type: 'ioredis',
           options: {

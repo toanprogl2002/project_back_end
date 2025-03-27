@@ -5,12 +5,13 @@ import {
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
+  Relation,
 } from 'typeorm';
 
 import { Category } from './category.entity';
 // import { RefreshToken } from './refresh_token.entity';
 import { ROLE_TYPE_ENUM } from '@/constants/enums/';
-import { Session } from './session.entity';
+import { Session } from './session';
 
 @Entity('users')
 export class User {
@@ -56,6 +57,7 @@ export class User {
   @OneToMany(() => Category, (category) => category.user)
   categories: Category[];
 
-  // @OneToMany(() => Session, session => session.user)
+  // @OneToMany(() => Session, (session) => session.user)
   // sessions: Session[];
+
 }

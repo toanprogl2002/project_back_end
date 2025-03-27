@@ -25,7 +25,6 @@ import {
   _hash,
   generateTokensPair,
   readOrCreateUserKey,
-
 } from '../utils';
 import { uuid } from '@/utils';
 import { IPayloadToken } from '../interfaces';
@@ -93,7 +92,7 @@ export class AuthService {
     const user = await this._user_repo
       .createQueryBuilder('_entity')
       // .where('_entity.username = :username', { username: request.email })
-      .orWhere('_entity.email = :email', { email: request.email })
+      .where('_entity.email = :email', { email: request.email })
       .getOne();
 
 
@@ -117,13 +116,13 @@ export class AuthService {
       time_expire,
     );
 
-    // await this._cache_service.set(payload.id, payload, time_expire);
-    // await this._session_repo.insert({
-    //   id: auth_id,
-    //   user_id: user.id,
-    //   access_token,
-    //   refresh_token,
-    // });
+    await this._cache_service.set(payload.id, payload, time_expire);
+    await this._session_repo.insert({
+      id: auth_id,
+      user_id: user.id,
+      access_token,
+      refresh_token,
+    });
 
     return { access_token, refresh_token };
   }
