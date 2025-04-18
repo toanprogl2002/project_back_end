@@ -14,7 +14,7 @@ export class AppConfig {
   constructor(
     @Inject(app_config.KEY)
     protected readonly config: ConfigType<typeof app_config>,
-  ) { }
+  ) {}
 
   getHost(): string {
     return this.config.host;

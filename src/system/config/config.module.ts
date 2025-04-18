@@ -17,4 +17,4 @@ import { isProduction } from '@/utils';
   providers: services,
   exports: services,
 })
-export class ConfigModule { }
+export class ConfigModule {}

@@ -9,12 +9,9 @@ import e from 'express';
 import { ExcelService } from './excel.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Task, Category, User])
-  ],
-  providers: [ReportsService,
-    ExcelService],
+  imports: [TypeOrmModule.forFeature([Task, Category, User])],
+  providers: [ReportsService, ExcelService],
   controllers: [ReportsController],
-  exports: [ReportsService]
+  exports: [ReportsService],
 })
-export class ReportsModule { }
+export class ReportsModule {}

@@ -9,5 +9,5 @@ export const modules = [
   CategoriesModule,
   ReportsModule,
   TasksModule,
-  UsersModule
+  UsersModule,
 ];

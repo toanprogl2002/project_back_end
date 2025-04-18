@@ -11,10 +11,11 @@ import {
 import { Category } from './category.entity';
 // import { RefreshToken } from './refresh_token.entity';
 import { ROLE_TYPE_ENUM } from '@/constants/enums/';
-import { Session } from './session';
+import { BaseEntity } from './base.entity';
+import { Session } from './session.entity';
 
 @Entity('users')
-export class User {
+export class User extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -33,31 +34,12 @@ export class User {
   @Column({ type: 'int', enum: [0, 1], default: 1 })
   status: number;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  createdDate: Date;
-
-  @Column({ type: 'uuid', nullable: true, name: 'created_by' })
-  createdBy: string;
-
-  @Column({ type: 'timestamp', nullable: true, name: 'modified_date' })
-  modifiedDate: Date;
-
-  @Column({ type: 'uuid', nullable: true, name: 'modified_by' })
-  modifiedBy: string;
-
-  @Column({ type: 'timestamp', nullable: true, name: 'deleted_date' })
-  deletedDate: Date;
-
-  @Column({ type: 'uuid', nullable: true, name: 'deleted_by' })
-  deletedBy: string;
-
-  @Column({ type: 'boolean', default: false })
-  deleted: boolean;
-
   @OneToMany(() => Category, (category) => category.user)
   categories: Category[];
 
-  // @OneToMany(() => Session, (session) => session.user)
+  // In user.entity.ts
+  // @OneToOne(() => Session, session => session.user)
   // sessions: Session[];
-
+  // @OneToOne(() => Session, (session) => session.user)
+  // session!: Relation<Session>;
 }

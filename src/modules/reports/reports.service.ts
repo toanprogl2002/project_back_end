@@ -1,5 +1,10 @@
 // src/modules/reports/reports.service.ts
-import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 import { Task } from '../../database/entities/task.entity';
@@ -19,8 +24,8 @@ export class ReportsService {
     // @InjectRepository(Category)
     // private categoryRepository: Repository<Category>,
     // @Inject(forwardRef(() => ExcelService))
-    private readonly excelService: ExcelService
-  ) { }
+    private readonly excelService: ExcelService,
+  ) {}
   private getStatusLabel(status: number): string {
     switch (status) {
       case 0:
@@ -34,7 +39,11 @@ export class ReportsService {
     }
   }
 
-  async generateExcelReport(period: ReportPeriod, startDate?: string, userId?: string): Promise<Buffer> {
+  async generateExcelReport(
+    period: ReportPeriod,
+    startDate?: string,
+    userId?: string,
+  ): Promise<Buffer> {
     const report = await this.getTaskReport(period, startDate, userId);
     // console.log('ExcelService instance:', this.excelService);
     // console.log('Available methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.excelService)));
@@ -42,13 +51,19 @@ export class ReportsService {
     return this.excelService.generateTaskReport(
       report.data.tasks,
       period,
-      report.data.startDate
+      report.data.startDate,
     );
   }
 
-  async getTaskReport(period: ReportPeriod, startDate?: string, userId?: string): Promise<any> {
+  async getTaskReport(
+    period: ReportPeriod,
+    startDate?: string,
+    userId?: string,
+  ): Promise<any> {
     // Kiểm tra userId hợp lệ
-    const user = await this.userRepository.findOne({ where: { id: userId, deleted: false } });
+    const user = await this.userRepository.findOne({
+      where: { id: userId, deleted: false },
+    });
     if (!user) {
       throw new NotFoundException('Không tìm thấy người dùng');
     }
@@ -57,7 +72,8 @@ export class ReportsService {
     const { start, end } = this.calculateDateRange(period, startDate);
 
     // Xây dựng truy vấn
-    const query = this.taskRepository.createQueryBuilder('task')
+    const query = this.taskRepository
+      .createQueryBuilder('task')
       .leftJoinAndSelect('task.category', 'category')
       .where('task.deleted = :deleted', { deleted: false })
       .andWhere('task.start_date >= :startDate', { startDate: start })
@@ -75,38 +91,54 @@ export class ReportsService {
       .getMany();
 
     // Tính toán thống kê
-    const completedTasks = tasks.filter(task => task.status === 2).length;
-    const onTimeTasks = tasks.filter(task =>
-      task.status === 2 &&
-      task.completed_date &&
-      task.end_date &&
-      new Date(task.completed_date) <= new Date(task.end_date)
+    const completedTasks = tasks.filter((task) => task.status === 2).length;
+    const onTimeTasks = tasks.filter(
+      (task) =>
+        task.status === 2 &&
+        task.completed_date &&
+        task.end_date &&
+        new Date(task.completed_date) <= new Date(task.end_date),
     ).length;
-    const overdueTasks = tasks.filter(task =>
-      task.status !== 2 &&
-      task.end_date &&
-      new Date(task.end_date) < new Date()
+    const overdueTasks = tasks.filter(
+      (task) =>
+        task.status !== 2 &&
+        task.end_date &&
+        new Date(task.end_date) < new Date(),
     ).length;
 
     // Định dạng nhiệm vụ
-    const formattedTasks = tasks.map(task => ({
+    const formattedTasks = tasks.map((task) => ({
       id: task.id,
       name: task.name,
       category: {
         id: task.category?.id,
-        name: task.category?.name
+        name: task.category?.name,
       },
       startDate: task.start_date,
       endDate: task.end_date,
       completedDate: task.completed_date,
       status: task.status,
       statusLabel: this.getStatusLabel(task.status),
-      onTime: task.status === 2 && task.completed_date && task.end_date ?
-        new Date(task.completed_date) <= new Date(task.end_date) : null,
-      daysToComplete: task.completed_date && task.start_date ?
-        Math.ceil((new Date(task.completed_date).getTime() - new Date(task.start_date).getTime()) / (1000 * 60 * 60 * 24)) : null,
-      plannedDays: task.end_date && task.start_date ?
-        Math.ceil((new Date(task.end_date).getTime() - new Date(task.start_date).getTime()) / (1000 * 60 * 60 * 24)) : null
+      onTime:
+        task.status === 2 && task.completed_date && task.end_date
+          ? new Date(task.completed_date) <= new Date(task.end_date)
+          : null,
+      daysToComplete:
+        task.completed_date && task.start_date
+          ? Math.ceil(
+              (new Date(task.completed_date).getTime() -
+                new Date(task.start_date).getTime()) /
+                (1000 * 60 * 60 * 24),
+            )
+          : null,
+      plannedDays:
+        task.end_date && task.start_date
+          ? Math.ceil(
+              (new Date(task.end_date).getTime() -
+                new Date(task.start_date).getTime()) /
+                (1000 * 60 * 60 * 24),
+            )
+          : null,
     }));
 
     // Trả về báo cáo
@@ -121,16 +153,25 @@ export class ReportsService {
           completedTasks,
           onTimeTasks,
           overdueTasks,
-          completionRate: tasks.length > 0 ? parseFloat((completedTasks / tasks.length).toFixed(2)) * 100 : 0,
-          onTimeRate: completedTasks > 0 ? parseFloat((completedTasks / tasks.length).toFixed(2)) * 100 : 0
-        }
+          completionRate:
+            tasks.length > 0
+              ? parseFloat((completedTasks / tasks.length).toFixed(2)) * 100
+              : 0,
+          onTimeRate:
+            completedTasks > 0
+              ? parseFloat((completedTasks / tasks.length).toFixed(2)) * 100
+              : 0,
+        },
       },
       message: `Báo cáo công việc ${period === ReportPeriod.WEEK ? 'tuần' : 'tháng'} thành công`,
-      status: true
+      status: true,
     };
   }
 
-  private calculateDateRange(period: ReportPeriod, customStartDate?: string): { start: Date, end: Date } {
+  private calculateDateRange(
+    period: ReportPeriod,
+    customStartDate?: string,
+  ): { start: Date; end: Date } {
     let start = customStartDate ? new Date(customStartDate) : new Date();
     let end = new Date(start);
 
@@ -152,18 +193,34 @@ export class ReportsService {
       end.setHours(23, 59, 59, 999);
     } else {
       // End of month
-      end = new Date(start.getFullYear(), start.getMonth() + 1, 0, 23, 59, 59, 999);
+      end = new Date(
+        start.getFullYear(),
+        start.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+        999,
+      );
     }
     return { start, end };
   }
 
-  async getAdminStatistics(period: StatisticsPeriod, startDate?: string, endDate?: string): Promise<any> {
-
+  async getAdminStatistics(
+    period: StatisticsPeriod,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<any> {
     // Calculate date range based on period
-    const dateRange = this.calculateStatisticsDateRange(period, startDate, endDate);
+    const dateRange = this.calculateStatisticsDateRange(
+      period,
+      startDate,
+      endDate,
+    );
 
     // Get all tasks within the date range
-    const tasks = await this.taskRepository.createQueryBuilder('task')
+    const tasks = await this.taskRepository
+      .createQueryBuilder('task')
       .leftJoinAndSelect('task.category', 'category')
       .leftJoinAndSelect('category.user', 'user')
       .where('task.deleted = :deleted', { deleted: false })
@@ -174,19 +231,19 @@ export class ReportsService {
     // Get all users
     const users = await this.userRepository.find({
       where: { deleted: false },
-      select: ['id', 'email', 'name', 'role', 'status']
+      select: ['id', 'email', 'name', 'role', 'status'],
     });
 
     // Get tasks per user
     const tasksByUser = {};
-    users.forEach(user => {
+    users.forEach((user) => {
       tasksByUser[user.id] = {
         user: {
           id: user.id,
           email: user.email,
           name: `${user.name || ''}`.trim(),
           role: user.role,
-          status: user.status
+          status: user.status,
         },
         tasks: [],
         totalTasks: 0,
@@ -194,12 +251,12 @@ export class ReportsService {
         onTimeTasks: 0,
         overdueTasks: 0,
         completionRate: 0,
-        onTimeRate: 0
+        onTimeRate: 0,
       };
     });
 
     // Assign tasks to users
-    tasks.forEach(task => {
+    tasks.forEach((task) => {
       const userId = task.category?.user?.id;
       if (userId && tasksByUser[userId]) {
         tasksByUser[userId].tasks.push(task);
@@ -209,14 +266,21 @@ export class ReportsService {
           tasksByUser[userId].completedTasks++;
 
           // Check if completed on time
-          if (task.completed_date && task.end_date &&
-            new Date(task.completed_date) <= new Date(task.end_date)) {
+          if (
+            task.completed_date &&
+            task.end_date &&
+            new Date(task.completed_date) <= new Date(task.end_date)
+          ) {
             tasksByUser[userId].onTimeTasks++;
           }
         }
 
         // Check if overdue
-        if (task.status !== 2 && task.end_date && new Date(task.end_date) < new Date()) {
+        if (
+          task.status !== 2 &&
+          task.end_date &&
+          new Date(task.end_date) < new Date()
+        ) {
           tasksByUser[userId].overdueTasks++;
         }
       }
@@ -224,11 +288,19 @@ export class ReportsService {
 
     // Calculate percentages
     Object.values(tasksByUser).forEach((userData: any) => {
-      userData.completionRate = userData.totalTasks > 0 ?
-        parseFloat((userData.completedTasks / userData.totalTasks).toFixed(2)) * 100 : 0;
+      userData.completionRate =
+        userData.totalTasks > 0
+          ? parseFloat(
+              (userData.completedTasks / userData.totalTasks).toFixed(2),
+            ) * 100
+          : 0;
 
-      userData.onTimeRate = userData.completedTasks > 0 ?
-        parseFloat((userData.onTimeTasks / userData.completedTasks).toFixed(2)) * 100 : 0;
+      userData.onTimeRate =
+        userData.completedTasks > 0
+          ? parseFloat(
+              (userData.onTimeTasks / userData.completedTasks).toFixed(2),
+            ) * 100
+          : 0;
 
       // Remove the actual task objects to keep the response size manageable
       delete userData.tasks;
@@ -236,14 +308,14 @@ export class ReportsService {
 
     // Get task counts by status
     const tasksByStatus = {
-      notStarted: tasks.filter(t => t.status === 0).length,
-      inProgress: tasks.filter(t => t.status === 1).length,
-      completed: tasks.filter(t => t.status === 2).length
+      notStarted: tasks.filter((t) => t.status === 0).length,
+      inProgress: tasks.filter((t) => t.status === 1).length,
+      completed: tasks.filter((t) => t.status === 2).length,
     };
 
     // Get task counts by category
     const tasksByCategory = {};
-    tasks.forEach(task => {
+    tasks.forEach((task) => {
       const categoryId = task.category?.id;
       const categoryName = task.category?.name || 'None categorized';
 
@@ -253,7 +325,7 @@ export class ReportsService {
           name: categoryName,
           count: 0,
           completed: 0,
-          completion_rate: 0
+          completion_rate: 0,
         };
       }
 
@@ -265,8 +337,10 @@ export class ReportsService {
 
     // Calculate category completion rates
     Object.values(tasksByCategory).forEach((catData: any) => {
-      catData.completion_rate = catData.count > 0 ?
-        parseFloat((catData.completed / catData.count).toFixed(2)) * 100 : 0;
+      catData.completion_rate =
+        catData.count > 0
+          ? parseFloat((catData.completed / catData.count).toFixed(2)) * 100
+          : 0;
     });
 
     // Calculate time-based metrics
@@ -333,38 +407,47 @@ export class ReportsService {
         period,
         dateRange: {
           start: dateRange.start,
-          end: dateRange.end
+          end: dateRange.end,
         },
         overview: {
           totalUsers: users.length,
-          activeUsers: users.filter(u => u.status === 1).length,
+          activeUsers: users.filter((u) => u.status === 1).length,
           totalTasks: tasks.length,
-          completedTasks: tasks.filter(t => t.status === 2).length,
-          overdueTasks: tasks.filter(t => t.status !== 2 && t.end_date && new Date(t.end_date) < new Date()).length,
-          completionRate: tasks.length > 0 ?
-            parseFloat((tasks.filter(t => t.status === 2).length / tasks.length).toFixed(2)) * 100 : 0
+          completedTasks: tasks.filter((t) => t.status === 2).length,
+          overdueTasks: tasks.filter(
+            (t) =>
+              t.status !== 2 && t.end_date && new Date(t.end_date) < new Date(),
+          ).length,
+          completionRate:
+            tasks.length > 0
+              ? parseFloat(
+                  (
+                    tasks.filter((t) => t.status === 2).length / tasks.length
+                  ).toFixed(2),
+                ) * 100
+              : 0,
         },
         userStatistics: Object.values(tasksByUser),
         taskDistribution: {
           byStatus: tasksByStatus,
-          byCategory: Object.values(tasksByCategory)
+          byCategory: Object.values(tasksByCategory),
         },
       },
       message: 'Thống kê công việc thành công',
-      status: true
+      status: true,
     };
   }
 
   private calculateStatisticsDateRange(
     period: StatisticsPeriod,
     customStartDate?: string,
-    customEndDate?: string
-  ): { start: Date, end: Date } {
+    customEndDate?: string,
+  ): { start: Date; end: Date } {
     // If custom dates are provided, use them
     if (customStartDate && customEndDate) {
       return {
         start: new Date(customStartDate),
-        end: new Date(customEndDate)
+        end: new Date(customEndDate),
       };
     }
 
@@ -394,7 +477,15 @@ export class ReportsService {
         start = new Date(start.getFullYear(), start.getMonth(), 1);
 
         // End of month
-        end = new Date(start.getFullYear(), start.getMonth() + 1, 0, 23, 59, 59, 999);
+        end = new Date(
+          start.getFullYear(),
+          start.getMonth() + 1,
+          0,
+          23,
+          59,
+          59,
+          999,
+        );
         break;
 
       case StatisticsPeriod.YEAR:

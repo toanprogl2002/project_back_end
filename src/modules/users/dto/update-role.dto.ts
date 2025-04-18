@@ -5,7 +5,7 @@ import { IsEnum, IsNotEmpty, IsUUID } from 'class-validator';
 export class UpdateRoleDto {
   @IsNotEmpty({ message: 'id is required' })
   @IsUUID()
-  id: string
+  id: string;
 
   @IsNotEmpty({ message: 'Role is required' })
   @IsEnum(ROLE_TYPE_ENUM, { message: 'Role must be either "user" or "admin"' })

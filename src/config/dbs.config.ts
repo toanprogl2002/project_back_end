@@ -17,7 +17,7 @@ export class DbsConfig {
   constructor(
     @Inject(dbs_config.KEY)
     protected readonly config: ConfigType<typeof dbs_config>,
-  ) { }
+  ) {}
 
   getHost(): string {
     return this.config.host;

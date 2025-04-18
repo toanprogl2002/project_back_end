@@ -6,8 +6,7 @@ https://docs.nestjs.com/modules
 import { Module } from '@nestjs/common';
 
 @Module({
-  providers: [
-    LoggerService],
+  providers: [LoggerService],
   exports: [LoggerService],
 })
-export class LoggerModule { }
+export class LoggerModule {}

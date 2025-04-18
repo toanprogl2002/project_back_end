@@ -38,7 +38,7 @@ async function bootstrap() {
 
   app.setGlobalPrefix(process.env.API_PREFIX ?? '/api');
 
-  app.useLogger(_logger)
+  app.useLogger(_logger);
 
   app.use(
     helmet({
@@ -55,12 +55,14 @@ async function bootstrap() {
     new AllExceptionFilter(_http),
   );
 
-  app.useGlobalPipes(new ValidationPipe({
-    transform: true,
-    whitelist: true,
-    exceptionFactory: (errors: ValidationError[]) =>
-      new ValidationException(null, errors),
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      exceptionFactory: (errors: ValidationError[]) =>
+        new ValidationException(null, errors),
+    }),
+  );
 
   if (_app_config.getApiDocument()) {
     createSwaggerDocument(app);
@@ -72,7 +74,6 @@ async function bootstrap() {
   await app.listen(port, host, () => {
     _logger.log(`Application listen in ${port}`, 'Application');
   });
-
 }
 
 void bootstrap();

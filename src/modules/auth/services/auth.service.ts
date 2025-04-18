@@ -16,7 +16,6 @@ import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
 import { AuthConfig } from '@/config';
 import { CacheService } from '@/system/cache';
-import { Session } from '@/database/entities';
 import { ValidationException } from '@/system/exceptions';
 import { ROLE_TYPE_ENUM } from '@/constants';
 import ms from 'ms';
@@ -28,6 +27,7 @@ import {
 } from '../utils';
 import { uuid } from '@/utils';
 import { IPayloadToken } from '../interfaces';
+import { Session } from '@/database/entities';
 
 @Injectable()
 export class AuthService {
@@ -52,7 +52,7 @@ export class AuthService {
   async register(request: RegisterDto) {
     if (
       await this._user_repo.exists({
-        where: { name: request.name }
+        where: { name: request.name },
       })
     )
       throw new ValidationException({ name: ['Tên đã tồn tại'] });
@@ -60,8 +60,7 @@ export class AuthService {
       await this._user_repo.exists({
         where: { email: request.email },
       })
-    )
-      throw new ValidationException({ email: ['Email đã tồn tại'] });
+    ) throw new ValidationException({ email: ['Email đã tồn tại'] });
 
     return await this._user_repo.save(
       this._user_repo.create({
@@ -88,16 +87,39 @@ export class AuthService {
     // await this.usersRepository.save(user);
     // return { message: 'Đăng ký thành công', status: 201 };
   }
+
+  async registerAdmin(request: RegisterDto) {
+    if (
+      await this._user_repo.exists({
+        where: { name: request.name },
+      })
+    )
+      throw new ValidationException({ name: ['Tên đã tồn tại'] });
+    if (
+      await this._user_repo.exists({
+        where: { email: request.email },
+      })
+    ) throw new ValidationException({ email: ['Email đã tồn tại'] });
+
+    return await this._user_repo.save(
+      this._user_repo.create({
+        name: request.name,
+        email: request.email,
+        password: await _hash(request.password),
+        role: ROLE_TYPE_ENUM.ADMIN,
+      }),
+    );
+  }
+
   async login(request: LoginDto) {
     const user = await this._user_repo
       .createQueryBuilder('_entity')
-      // .where('_entity.username = :username', { username: request.email })
       .where('_entity.email = :email', { email: request.email })
       .getOne();
 
-
     if (!user || !(await _compare(request.password, user.password)))
-      throw new UnauthorizedException();
+      throw new BadRequestException();
+
     const { private_key, public_key } = readOrCreateUserKey(user.id);
     const time_expire = this.getTokenExpireConfig();
 
@@ -117,64 +139,18 @@ export class AuthService {
     );
 
     await this._cache_service.set(payload.id, payload, time_expire);
-    await this._session_repo.insert({
-      id: auth_id,
-      user_id: user.id,
-      access_token,
-      refresh_token,
-    });
-
+    // const test = this._cache_service.get(payload.id);
+    await this._session_repo.save(
+      this._session_repo.create({
+        id: auth_id,
+        user_id: user.id,
+        access_token,
+        refresh_token,
+      }),
+    );
     return { access_token, refresh_token };
   }
-  // async login(loginDto: LoginDto) {
-  //   const user = await this.usersRepository.findOne({
-  //     where: { email: loginDto.email },
-  //   });
-  //   // console.log(user)
-  //   if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
-  //     throw new BadRequestException('Email hoặc mật khẩu không đúng');
-  //   }
 
-  //   const payload = { email: user.email, sub: user.id };
-  //   const accessToken = this.jwtService.sign(payload, { expiresIn: '60m' });
-  //   const refreshToken = this.jwtService.sign(
-  //     { ...payload, type: 'refresh' },
-  //     { expiresIn: '7d' },
-  //   );
-
-  //   // Save refresh token to database
-  //   const expiresAt = new Date();
-  //   expiresAt.setDate(expiresAt.getDate() + 7);
-
-  //   // Save refresh token to dedicated table
-  //   const check_id_for = await this.refreshRepository.findOne({
-  //     where: { userId: user.id },
-  //   });
-  //   if (check_id_for?.userId === user.id) {
-  //     await this.refreshRepository.update(
-  //       { userId: user.id },
-  //       {
-  //         token: refreshToken,
-  //         expiresAt,
-  //       },
-  //     );
-  //     return {
-  //       access_token: accessToken,
-  //       refresh_token: refreshToken,
-  //     };
-  //   }
-
-  //   await this.refreshRepository.save({
-  //     token: refreshToken,
-  //     userId: user.id,
-  //     expiresAt,
-  //   });
-
-  //   return {
-  //     access_token: accessToken,
-  //     refresh_token: refreshToken,
-  //   };
-  // }
 
   // async refreshToken(token: string) {
   //   try {
@@ -221,39 +197,51 @@ export class AuthService {
   //   }
   // }
 
-  // async logout(userId: string, token?: string) {
-  //   const user = await this.usersRepository.findOne({ where: { id: userId } });
-  //   const refreshToken = await this.refreshRepository.findOne({
-  //     where: { userId },
-  //   });
-  //   if (!user) {
-  //     throw new NotFoundException('Người dùng không tồn tại');
-  //   }
-  //   if (refreshToken) {
-  //     await this.refreshRepository.delete({ userId });
-  //   }
-  //   if (token) {
-  //     try {
-  //       const decoded = this.jwtService.decode(token);
-  //       if (decoded && typeof decoded === 'object' && decoded.exp) {
-  //         const remainingTime = decoded.exp - Math.floor(Date.now() / 1000);
-  //         if (remainingTime > 0) {
-  //           // Lưu token vào Redis với thời gian hết hạn
-  //           await this.redis.set(token, 'blacklisted', 'EX', remainingTime);
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.error('Error handling token blacklist:', error);
-  //     }
-  //   }
-  //   return;
-  // }
+  async logout(session: Session) {
+    await this._session_repo.update(
+      session.id, {
+      logout_at: new Date(),
+    }
+    )
+    await this._cache_service.del(`auth:${session.id}`);
+  }
 
-  // async isTokenBlacklisted(token: string): Promise<boolean> {
-  //   const result = await this.redis.get(token);
-  //   return result === 'blacklisted';
-  // }
+  async changePassword(
+    id: string,
+    changePassDto: ChangePassDto,
+  ) {
+    const user = await this._user_repo.findOne({
+      where: { id: id },
+    });
+    const clearSession = await this._session_repo.findOne({
+      where: { user_id: id },
+    });
 
+    if (!user) {
+      throw new NotFoundException('Người dùng không tồn tại');
+    }
+    if (!clearSession) {
+      throw new NotFoundException('Không tìm thấy phiên đăng nhập');
+    }
+    // Verify old password
+    const isPasswordValid = await _compare(
+      changePassDto.oldPassword,
+      user.password,
+    );
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Mật khẩu cũ không đúng');
+    }
+
+    user.password = await _hash(changePassDto.newPassword);
+
+    await this._user_repo.save(user);
+
+    if (clearSession) {
+      await this._session_repo.delete(clearSession.id);
+      await this._cache_service.del(`auth:${id}`);
+    }
+    return { message: 'Đổi mật khẩu thành công' };
+  }
   // async changePassword(id: string, changePassDto: ChangePassDto) {
   //   // Check if new password matches confirm password
   //   if (changePassDto.newPassword !== changePassDto.confirmPassword) {

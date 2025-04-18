@@ -28,18 +28,20 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       const session = await this._auth_service.getSessionByToken(token);
-
+      // console.log(!!session?.logout_at);
       if (!session || !!session.logout_at) throw new UnauthorizedException();
-
-      const payload: IPayloadToken | null = await verify(token, session.user_id);
-
-      if (
-        payload &&
-        payload.id &&
-        !(await this._cache_service.get<IPayloadToken>(payload.id))
-      )
-        throw new UnauthorizedException();
-
+      const payload: IPayloadToken | null = await verify(
+        token,
+        session!.user_id,
+      );
+      console.log(payload?.id);
+      // if (
+      //   payload &&
+      //   payload.id &&
+      //   !(await this._cache_service.get<IPayloadToken>(payload.id))
+      // )
+      //   throw new UnauthorizedException();
+      const cache = await this._cache_service.get<IPayloadToken>(payload!.id);
       const user = await this._auth_service.getByUsername(payload?.name);
       if (!user) throw new UnauthorizedException();
 
@@ -54,7 +56,6 @@ export class JwtAuthGuard implements CanActivate {
 
   protected async extractTokens(request: Request) {
     const [type, token] = request.headers.authorization?.split(' ') || [];
-
     if (type === 'Bearer' && token?.trim().length) return token;
 
     return (

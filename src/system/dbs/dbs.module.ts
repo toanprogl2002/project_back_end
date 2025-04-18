@@ -4,6 +4,7 @@ import { join } from 'path';
 
 import { DbsConfig, RedisConfig } from '@/config';
 import { isProduction } from '@/utils/env';
+import { Session } from '@/database/entities';
 
 
 @Global()
@@ -22,12 +23,14 @@ import { isProduction } from '@/utils/env';
         password: _dbs_config.getPassword(),
         database: _dbs_config.getDatabase(),
         autoLoadEntities: true,
-        entities: [join(__dirname, '../../database/entities/**/*.entity{.ts,.js}')],
+        entities: [
+          Session,
+          join(__dirname, '../../database/entities/**/*.entity{.ts,.js}')],
         synchronize: true, // đồng bộ
         subscribers: [
           join(__dirname, '../../database/subscribers/**/*.subscriber{.ts,.js}'),],
         ssl: false,
-        logging: true,
+        logging: !isProduction,
         cache: {
           type: 'ioredis',
           options: {

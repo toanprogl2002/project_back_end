@@ -15,7 +15,7 @@ export class RedisConfig {
   constructor(
     @Inject(redis_config.KEY)
     protected readonly config: ConfigType<typeof redis_config>,
-  ) { }
+  ) {}
 
   getHost(): string {
     return this.config.host;

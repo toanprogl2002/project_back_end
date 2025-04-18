@@ -28,7 +28,7 @@ import { RequestWithUser } from '../categories/requestPost';
 @Controller('users')
 // @UseGuards(AuthGuard('jwt'))
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @Get()
   @UseGuards(AuthGuard('jwt'))
@@ -83,9 +83,8 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'))
   async updateRole(
     @Body(ValidationPipe) updateRole: UpdateRoleDto,
-    @Req() req: RequestWithUser
+    @Req() req: RequestWithUser,
   ) {
     return this.usersService.updateRole(updateRole, req.user);
   }
-
 }

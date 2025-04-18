@@ -5,9 +5,7 @@ import { Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class CacheService {
-  constructor(
-    @Inject(CACHE_MANAGER) protected readonly _cache: Cache,
-  ) { }
+  constructor(@Inject(CACHE_MANAGER) protected readonly _cache: Cache) {}
 
   get<T>(key: string) {
     return this._cache.get<T>(key);

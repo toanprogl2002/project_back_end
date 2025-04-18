@@ -15,4 +15,4 @@ import { CategoriesModule } from '../categories/categories.module';
   controllers: [TasksController],
   exports: [TasksService],
 })
-export class TasksModule { }
+export class TasksModule {}

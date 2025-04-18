@@ -7,11 +7,13 @@ export enum StatisticsPeriod {
   WEEK = 'week',
   MONTH = 'month',
   YEAR = 'year',
-  ALL = 'all'
+  ALL = 'all',
 }
 
 export class StatisticsRequestDto {
-  @IsEnum(StatisticsPeriod, { message: 'Period must be date, week, month, year, or all' })
+  @IsEnum(StatisticsPeriod, {
+    message: 'Period must be date, week, month, year, or all',
+  })
   @IsOptional()
   period: StatisticsPeriod = StatisticsPeriod.MONTH;
 

@@ -1,5 +1,11 @@
 // src/modules/reports/dto/report-request.dto.ts
-import { IsEnum, IsISO8601, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsEnum,
+  IsISO8601,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum ReportPeriod {

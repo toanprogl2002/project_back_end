@@ -4,7 +4,6 @@ import * as ExcelJS from 'exceljs';
 import { Buffer } from 'buffer';
 @Injectable()
 export class ExcelService {
-
   private getStatusLabel(status: number): string {
     switch (status) {
       case 0:
@@ -18,18 +17,32 @@ export class ExcelService {
     }
   }
 
-  async generateTaskReport(data: any[], period: string, startDate: Date): Promise<Buffer> {
+  async generateTaskReport(
+    data: any[],
+    period: string,
+    startDate: Date,
+  ): Promise<Buffer> {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Task Report');
 
     // Add title row with period information
     worksheet.mergeCells('A1:H1');
-    worksheet.getCell('A1').value = `Báo cáo công việc ${period === 'week' ? 'tuần' : 'tháng'} từ ${startDate.toLocaleDateString('vi-VN')}`;
+    worksheet.getCell('A1').value =
+      `Báo cáo công việc ${period === 'week' ? 'tuần' : 'tháng'} từ ${startDate.toLocaleDateString('vi-VN')}`;
     worksheet.getCell('A1').font = { size: 16, bold: true };
     worksheet.getCell('A1').alignment = { horizontal: 'center' };
 
     // Add headers
-    worksheet.addRow(['STT', 'Tên công việc', 'Tên Danh mục', 'Ngày bắt đầu', "Ngày kết thúc", 'Ngày kết thúc dự kiến', 'Ngày hoàn thành', 'Trạng thái']);
+    worksheet.addRow([
+      'STT',
+      'Tên công việc',
+      'Tên Danh mục',
+      'Ngày bắt đầu',
+      'Ngày kết thúc',
+      'Ngày kết thúc dự kiến',
+      'Ngày hoàn thành',
+      'Trạng thái',
+    ]);
 
     worksheet.getRow(2).eachCell((cell) => {
       cell.font = { bold: true };
@@ -51,8 +64,17 @@ export class ExcelService {
     data.forEach((task, index) => {
       const startDate = task.startDate ? new Date(task.startDate) : null;
       const endDate = task.endDate ? new Date(task.endDate) : null;
-      const completedDate = task.completedDate ? new Date(task.completedDate) : null;
-      const plannedDays = task.endDate && task.startDate ? Math.ceil((new Date(task.endDate).getTime() - new Date(task.startDate).getTime()) / (1000 * 60 * 60 * 24)) : null;
+      const completedDate = task.completedDate
+        ? new Date(task.completedDate)
+        : null;
+      const plannedDays =
+        task.endDate && task.startDate
+          ? Math.ceil(
+              (new Date(task.endDate).getTime() -
+                new Date(task.startDate).getTime()) /
+                (1000 * 60 * 60 * 24),
+            )
+          : null;
       worksheet.addRow([
         index + 1,
         task.name,
@@ -73,7 +95,11 @@ export class ExcelService {
             fgColor: { argb: 'FFE6FFE6' },
           };
         });
-      } else if (task.endDate && new Date(task.endDate) < new Date() && task.status !== 2) {
+      } else if (
+        task.endDate &&
+        new Date(task.endDate) < new Date() &&
+        task.status !== 2
+      ) {
         worksheet.getRow(rowIndex).eachCell((cell) => {
           cell.fill = {
             type: 'pattern',
@@ -89,5 +115,4 @@ export class ExcelService {
     const buffer: Buffer = Buffer.from(arrayBuffer);
     return buffer;
   }
-
 }

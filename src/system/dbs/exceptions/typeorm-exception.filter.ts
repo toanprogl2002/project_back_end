@@ -15,7 +15,7 @@ import { isProduction } from '@/utils';
 export class TypeORMExceptionFilter implements ExceptionFilter {
   protected static readonly logger = new Logger(TypeORMExceptionFilter.name);
 
-  constructor(protected readonly http_adapter_host: HttpAdapterHost) { }
+  constructor(protected readonly http_adapter_host: HttpAdapterHost) {}
 
   catch(exception: TypeORMError, host: ArgumentsHost) {
     const application_ref = this.http_adapter_host.httpAdapter;

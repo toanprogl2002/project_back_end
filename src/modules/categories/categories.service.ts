@@ -34,7 +34,7 @@ export class CategoriesService {
     query.where('category.deleted = :deleted', { deleted: false });
 
     if (categories.name) {
-      query.where('category.name LIKE :name', { name: `%${categories.name}%` });
+      query.andWhere('category.name LIKE :name', { name: `%${categories.name}%` });
       return {
         data: await query.getOne(),
         message: 'Lấy danh sách người dùng thành công',
@@ -91,7 +91,7 @@ export class CategoriesService {
       slug: slug,
       userId: userId,
       status: 1,
-      createdBy: userId,
+      created_by: userId,
     });
 
     await this.categoryRepository.save(category);
@@ -103,7 +103,6 @@ export class CategoriesService {
     };
   }
   // src/modules/categories/categories.service.ts
-
 
   async findOne(
     categoryId: string,
@@ -158,7 +157,7 @@ export class CategoriesService {
 
     category.name = updateCategoryDto.name;
     category.slug = slug;
-    category.modifiedDate = new Date();
+    category.modified_date = new Date();
 
     await this.categoryRepository.update(categoryId, category);
 
@@ -201,8 +200,8 @@ export class CategoriesService {
       }
     }
     category.deleted = true;
-    category.deletedDate = new Date();
-    category.deletedBy = userId.id;
+    category.deleted_date = new Date();
+    category.deleted_by = userId.id;
 
     await this.categoryRepository.save(category);
 

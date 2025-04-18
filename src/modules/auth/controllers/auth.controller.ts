@@ -26,9 +26,10 @@ import { AuthConfig } from '@/config';
 import { DataResponse } from '@/system/response';
 import { Response } from 'express';
 import ms, { StringValue } from 'ms';
+import { Cookies, RequiredAuth } from '../decorators';
+import { Session } from '@/database/entities';
 
 @ApiExtraModels(Profile)
-@ApiTags('[CMS] Auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -49,11 +50,11 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() request: LoginDto,
+    @Cookies() cookies: Session,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const { access_token, refresh_token } = await this.authService.login(
-      request,
-    );
+    const { access_token, refresh_token } =
+      await this.authService.login(request);
     response.cookie(this.auth_config.getAccessCookieName(), access_token, {
       httpOnly: true,
       maxAge: ms(this.auth_config.getTokenExpires() as StringValue),
@@ -62,27 +63,42 @@ export class AuthController {
     response.cookie(this.auth_config.getRefreshCookieName(), refresh_token, {
       httpOnly: true,
       maxAge: ms(this.auth_config.getTokenExpires() as StringValue) * 7,
-    }); // 7 days
+    });
   }
 
+  @RequiredAuth()
+  @Get('logout')
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  async logout(
+    // @Cookies() cookies: Session,
+    // @Res({ passthrough: true }) response: Response
+  ) {
+    // return cookies;
+    // console.log(cookies);
+    // console.log(response);
+    // if (cookies) await this.authService.logout(cookies);
+    // response.clearCookie(this.auth_config.getAccessCookieName());
+    // response.clearCookie(this.auth_config.getRefreshCookieName());
+  }
   // @Post('refresh')
   // @UseGuards(AuthGuard('jwt'))
   // refreshToken(@Body('refresh_token') refreshToken: string) {
   //   return this.authService.refreshToken(refreshToken);
   // }
 
-  // @Post(':id/change-password')
-  // @UseGuards(AuthGuard('jwt'))
-  // async changePassword(
-  //   @Param('id', new ParseUUIDPipe()) id: string,
-  //   @Body(ValidationPipe) changePassDto: ChangePassDto,
-  // ) {
-  //   try {
-  //     return await this.authService.changePassword(id, changePassDto);
-  //   } catch (error) {
-  //     throw new UnauthorizedException(id, error.message);
-  //   }
-  // }
+  @Post(':id/change-password')
+  @RequiredAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async changePassword(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body(ValidationPipe) changePassDto: ChangePassDto,
+  ) {
+    try {
+      return await this.authService.changePassword(id, changePassDto);
+    } catch (error) {
+      throw new UnauthorizedException(id, error.message);
+    }
+  }
 
   // @Post('logout')
   // @UseGuards(AuthGuard('jwt'))

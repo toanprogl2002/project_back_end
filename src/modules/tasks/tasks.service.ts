@@ -1,4 +1,9 @@
-import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from '@/database/entities/task.entity';
 import { Repository } from 'typeorm';
@@ -21,7 +26,7 @@ export class TasksService {
     // @InjectRepository(Category)
     @Inject(forwardRef(() => CategoriesService))
     private categoryService: CategoriesService,
-  ) { }
+  ) {}
 
   private getStatusLabel(status: number): string {
     switch (status) {
@@ -201,7 +206,7 @@ export class TasksService {
 
     // Check if the category exists and belongs to the user
     const category = await this.categoryService.findOne(
-      createTaskDto.category_id
+      createTaskDto.category_id,
     );
     if (!category) {
       throw new NotFoundException('Danh mục không tồn tại');
@@ -215,7 +220,7 @@ export class TasksService {
       end_date: new Date(createTaskDto.end_date) || null,
       status: 0,
       created_date: new Date(),
-      deleted: false
+      deleted: false,
     });
     // console.log(t)
     // Create a new task entity
@@ -237,12 +242,11 @@ export class TasksService {
     return {
       data: task,
       message: 'Tạo công việc thành công',
-      status: true
+      status: true,
     };
   }
 
   async updateTask(taskId: string, updateTaskDto: UpdateTaskDto) {
-
     const task = await this.taskRepository.findOne({
       where: { id: taskId, deleted: false },
       // relations: ['category']
@@ -255,7 +259,9 @@ export class TasksService {
     const updateData = {
       ...updateTaskDto,
       modified_date: new Date(),
-      end_date: updateTaskDto.end_date ? new Date(updateTaskDto.end_date) : undefined,
+      end_date: updateTaskDto.end_date
+        ? new Date(updateTaskDto.end_date)
+        : undefined,
     };
 
     if (updateTaskDto.name && !updateTaskDto.slug) {
@@ -272,7 +278,7 @@ export class TasksService {
     return {
       data: updatedTask,
       message: 'Cập nhật công việc thành công',
-      status: true
+      status: true,
     };
   }
 
@@ -294,9 +300,7 @@ export class TasksService {
     return {
       // data: ""task.deleted,
       message: 'Xóa công việc thành công',
-      status: true
+      status: true,
     };
   }
-
-
 }

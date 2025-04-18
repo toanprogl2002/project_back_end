@@ -8,7 +8,7 @@ import { CacheModule } from '@/system/cache';
 @Global()
 @Module({
   imports: [
-    CacheModule
+    CacheModule,
     // TypeOrmModule.forFeature([User, RefreshToken]),
     // PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
@@ -16,4 +16,4 @@ import { CacheModule } from '@/system/cache';
   providers: [AuthService, JwtAuthGuard],
   exports: [AuthService, JwtAuthGuard],
 })
-export class AuthModule { }
+export class AuthModule {}

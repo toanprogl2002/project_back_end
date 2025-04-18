@@ -18,4 +18,4 @@ import { TasksModule } from '../tasks/tasks.module';
   providers: [CategoriesService],
   exports: [CategoriesService],
 })
-export class CategoriesModule { }
+export class CategoriesModule {}

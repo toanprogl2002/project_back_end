@@ -118,15 +118,20 @@ export class UsersService {
     return { message: 'Tài khoản đã bị vô hiệu hóa', status: true };
   }
 
-  async updateRole(updateRole: UpdateRoleDto, currentUser: {
-    userId: string;
-    email: string;
-    role?: 'user' | 'admin';
-  }) {
+  async updateRole(
+    updateRole: UpdateRoleDto,
+    currentUser: {
+      userId: string;
+      email: string;
+      role?: 'user' | 'admin';
+    },
+  ) {
     console.log('Current user from JWT:', currentUser);
 
     if (currentUser.role !== 'admin') {
-      throw new ForbiddenException('Bạn không có quyền thay đổi vai trò người dùng');
+      throw new ForbiddenException(
+        'Bạn không có quyền thay đổi vai trò người dùng',
+      );
     }
 
     const user = await this.usersRepository.findOne({
@@ -138,8 +143,8 @@ export class UsersService {
     }
 
     user.role = updateRole.role;
-    user.modifiedDate = new Date();
-    user.modifiedBy = currentUser.userId;
+    user.modified_date = new Date();
+    user.modified_by = currentUser.userId;
 
     await this.usersRepository.save(user);
 
@@ -147,10 +152,10 @@ export class UsersService {
       data: {
         id: user.id,
         email: user.email,
-        role: user.role
+        role: user.role,
       },
       message: `Đã cập nhật vai trò thành ${updateRole.role}`,
-      status: true
+      status: true,
     };
   }
 }

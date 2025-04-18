@@ -25,7 +25,7 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 
 @Controller('tasks')
 export class TasksController {
-  constructor(private readonly tasksService: TasksService) { }
+  constructor(private readonly tasksService: TasksService) {}
 
   @Get()
   @UseGuards(AuthGuard('jwt'))
@@ -85,8 +85,7 @@ export class TasksController {
     // const userId = req.user.userId;
     try {
       return this.tasksService.updateTask(id, updateTaskDto);
-    }
-    catch (error) {
+    } catch (error) {
       throw new NotFoundException('Task not found');
     }
   }
@@ -100,8 +99,7 @@ export class TasksController {
     // const userId = req.user.userId;
     try {
       return this.tasksService.deleteTask(id);
-    }
-    catch (error) {
+    } catch (error) {
       throw new NotFoundException('Task not found');
     }
   }

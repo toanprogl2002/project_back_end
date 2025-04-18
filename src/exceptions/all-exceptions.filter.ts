@@ -12,7 +12,7 @@ import { HttpAdapterHost } from '@nestjs/core';
 export class CatchEverythingFilter implements ExceptionFilter {
   private readonly logger = new Logger(CatchEverythingFilter.name);
 
-  constructor(private readonly httpAdapterHost: HttpAdapterHost) { }
+  constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
     // Get the HTTP adapter
@@ -32,9 +32,10 @@ export class CatchEverythingFilter implements ExceptionFilter {
 
     if (exception instanceof HttpException) {
       const response = exception.getResponse();
-      message = typeof response === 'object'
-        ? response['message'] || response
-        : response;
+      message =
+        typeof response === 'object'
+          ? response['message'] || response
+          : response;
     } else if (exception instanceof Error) {
       message = exception.message;
     } else {

@@ -3,7 +3,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { DataPaginatedResponse, DataResponse } from './system/response';
 import { NestExpressApplication } from '@nestjs/platform-express';
 
-
 const config = new DocumentBuilder()
   .setTitle('NestJS API')
   .setDescription('The NestJS API description')
