@@ -17,7 +17,6 @@ export const parseErrors = (
     if (constraints) {
       acc[_path] = Object.keys(constraints).map((key) => constraints[key]);
 
-      // or acc[_path] = Object.values(constraints).map((value) => value);
     }
 
     if (children && children.length) {

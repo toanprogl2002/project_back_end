@@ -14,15 +14,13 @@ import { Request } from 'express';
 export class AllExceptionFilter<T = any> implements ExceptionFilter<T> {
   protected static readonly _logger = new Logger('ExceptionsHandler');
 
-  constructor(protected readonly _http: HttpAdapterHost) {}
+  constructor(protected readonly _http: HttpAdapterHost) { }
 
   catch(exception: T, host: ArgumentsHost) {
     const app_ref = this._http && this._http.httpAdapter;
 
     const ctx = host.switchToHttp();
     const req = ctx.getRequest<Request>();
-
-    console.log(exception);
 
     if (!(exception instanceof HttpException)) {
       return this.handleUnkownError(exception, host, app_ref, req);
@@ -65,13 +63,13 @@ export class AllExceptionFilter<T = any> implements ExceptionFilter<T> {
   ) {
     const body = this.isHttpError(exception)
       ? {
-          status_code: exception.statusCode,
-          message: exception.message,
-        }
+        status_code: exception.statusCode,
+        message: exception.message,
+      }
       : {
-          status_code: HttpStatus.INTERNAL_SERVER_ERROR,
-          message: MESSAGES.UNKNOWN_EXCEPTION_MESSAGE,
-        };
+        status_code: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: MESSAGES.UNKNOWN_EXCEPTION_MESSAGE,
+      };
 
     const response = host.getArgByIndex(1);
 

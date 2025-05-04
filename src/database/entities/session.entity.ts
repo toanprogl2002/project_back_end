@@ -35,7 +35,6 @@ export class Session {
   // //#region RELATIONS
   @OneToOne(() => User, user => user.id, {
     createForeignKeyConstraints: false,
-    // onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
   user!: Relation<User>;

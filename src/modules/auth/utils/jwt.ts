@@ -34,6 +34,32 @@ export const generateTokensPair = async (
   return { access_token, refresh_token };
 };
 
+export const generateAccessTokenWithRefreshToken = async (
+  payload: IPayloadToken,
+  private_key: string,
+  public_key: string,
+  time_expire: number,
+  refresh_token?: string,
+) => {
+  const access_token = await jwt.sign(payload, private_key, {
+    algorithm: 'RS256',
+    expiresIn: time_expire,
+  });
+
+  jwt.verify(access_token, public_key, (err, decoded) => {
+    if (err) {
+      console.log('error verify::', err);
+
+      throw new BadRequestException(err.message ?? 'Error verify access_token');
+    } else {
+      console.log('decoded verify::', decoded);
+    }
+  });
+
+  return access_token;
+}
+
+
 export const verify = async (
   token: string,
   user_id: string,

@@ -3,31 +3,23 @@ import {
   Controller,
   Get,
   HttpCode,
-  HttpStatus,
-  NotFoundException,
-  Param,
+  HttpStatus, Param,
   ParseUUIDPipe,
-  Post,
-  Req,
-  Res,
-  UnauthorizedException,
-  UseGuards,
-  ValidationPipe,
+  Post, Res,
+  UnauthorizedException, ValidationPipe
 } from '@nestjs/common';
 
-import { ChangePassDto } from '../requests';
-import { LoginDto } from '../requests';
-import { RegisterDto } from '../requests';
+import { ChangePassDto, LoginDto, RegisterDto } from '../requests';
 // import { RequestWithUser } from './auth';
-import { AuthService } from '../services';
-import { ApiExtraModels, ApiTags } from '@nestjs/swagger';
-import { Profile } from '../responses';
 import { AuthConfig } from '@/config';
+import { Session } from '@/database/entities';
 import { DataResponse } from '@/system/response';
+import { ApiExtraModels } from '@nestjs/swagger';
 import { Response } from 'express';
 import ms, { StringValue } from 'ms';
 import { Cookies, RequiredAuth } from '../decorators';
-import { Session } from '@/database/entities';
+import { Profile } from '../responses';
+import { AuthService } from '../services';
 
 @ApiExtraModels(Profile)
 @Controller('auth')
@@ -58,33 +50,37 @@ export class AuthController {
     response.cookie(this.auth_config.getAccessCookieName(), access_token, {
       httpOnly: true,
       maxAge: ms(this.auth_config.getTokenExpires() as StringValue),
-    }); // 1 days
+    });
 
     response.cookie(this.auth_config.getRefreshCookieName(), refresh_token, {
       httpOnly: true,
       maxAge: ms(this.auth_config.getTokenExpires() as StringValue) * 7,
     });
+    return new DataResponse({
+      access_token,
+      refresh_token,
+    });
   }
 
   @RequiredAuth()
   @Get('logout')
-  // @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.NO_CONTENT)
   async logout(
-    // @Cookies() cookies: Session,
-    // @Res({ passthrough: true }) response: Response
+    @Cookies() cookies: Session,
+    @Res({ passthrough: true }) response: Response
   ) {
-    // return cookies;
-    // console.log(cookies);
-    // console.log(response);
-    // if (cookies) await this.authService.logout(cookies);
-    // response.clearCookie(this.auth_config.getAccessCookieName());
-    // response.clearCookie(this.auth_config.getRefreshCookieName());
+    if (cookies) await this.authService.logout(cookies);
+    response.clearCookie(this.auth_config.getAccessCookieName());
+    response.clearCookie(this.auth_config.getRefreshCookieName());
   }
-  // @Post('refresh')
-  // @UseGuards(AuthGuard('jwt'))
-  // refreshToken(@Body('refresh_token') refreshToken: string) {
-  //   return this.authService.refreshToken(refreshToken);
-  // }
+
+  @Post('refresh')
+  async refreshToken(@Body('refresh_token') refreshToken: string) {
+    const { access_token } = await this.authService.refreshToken(refreshToken);
+    return {
+      access_token: access_token,
+    };
+  }
 
   @Post(':id/change-password')
   @RequiredAuth()
@@ -100,25 +96,9 @@ export class AuthController {
     }
   }
 
-  // @Post('logout')
-  // @UseGuards(AuthGuard('jwt'))
-  // async logout(
-  //   // @Req() req: RequestWithUser
-  // ) {
-  //   // try {
-  //   //   const token = req.headers.authorization?.split(' ')[1]; // Lấy token từ header
-  //   //   return this.authService.logout(req.user.userId, token);
-  //   // } catch (error) {
-  //   //   if (error instanceof NotFoundException) {
-  //   //     throw new UnauthorizedException('Người dùng không tồn tại');
-  //   //   }
-  //   //   throw new UnauthorizedException('Lỗi khi đăng xuất');
-  //   // }
-  // }
-
-  // @Get(':id')
-  // @UseGuards(AuthGuard('jwt'))
-  // getUserById(@Param('id', new ParseUUIDPipe()) id: string) {
-  //   return this.authService.getUserById(id);
-  // }
+  @Get(':id')
+  @RequiredAuth()
+  getUserById(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.authService.getUserById(id);
+  }
 }

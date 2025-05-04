@@ -1,19 +1,11 @@
-import { IsOptional, IsString } from 'class-validator';
-
 import { ApiProperty } from '@nestjs/swagger';
 
 import { Type } from 'class-transformer';
-import { IsInt, Min } from 'class-validator';
+import { IsInt, IsOptional, Min } from 'class-validator';
 
 import { message } from '@system/validator';
 
-
-export class FilterRequest {
-  @ApiProperty({ required: false })
-  @IsString({ message: message.string('Q') })
-  @IsOptional()
-  q?: string;
-}
+import { FilterRequest } from './filter.request';
 
 export class PaginateFilterRequest extends FilterRequest {
   @ApiProperty({ required: false, default: 1, type: 'number' })
@@ -29,11 +21,4 @@ export class PaginateFilterRequest extends FilterRequest {
   @IsOptional()
   @Type(() => Number)
   size = 10;
-}
-
-export class FindAllUserDto extends PaginateFilterRequest {
-  @ApiProperty({ required: false, default: 'emails', type: 'string' })
-  @IsOptional()
-  @IsString()
-  email?: string;
 }

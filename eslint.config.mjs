@@ -33,6 +33,17 @@ module.exports = {
     'import/first': 'error',
     'import/newline-after-import': 'error',
     'import/no-cycle': 2,
+    'simple-import-sort/exports': 'error',
+    'unused-imports/no-unused-imports': 'error',
+    'unused-imports/no-unused-vars': [
+      'warn',
+      {
+        vars: 'all',
+        varsIgnorePattern: '^_',
+        args: 'after-used',
+        argsIgnorePattern: '^_',
+      },
+    ],
 
     'simple-import-sort/imports': [
       'error',

@@ -6,14 +6,16 @@ import { CategoriesModule } from '../categories/categories.module';
 
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
     forwardRef(() => CategoriesModule),
+    AuthModule
   ],
   controllers: [UsersController],
   providers: [UsersService],
   exports: [UsersService],
 })
-export class UsersModule {}
+export class UsersModule { }

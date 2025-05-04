@@ -1,20 +1,18 @@
 import {
-  ForbiddenException,
-  forwardRef,
+  BadRequestException, forwardRef,
   Inject,
   Injectable,
-  NotFoundException,
-  UnauthorizedException,
+  NotFoundException
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
 import { User } from '../../database/entities/user.entity';
 import { CategoriesService } from '../categories/categories.service';
 
+import { buildPaginateQueryFilter } from '@/system/dbs';
+import { _compare, _hash } from '../auth/utils';
 import { FindAllUserDto } from './dto/find_all_user.dto';
 import { ResetPassDto } from './dto/reset_pass.dto';
-import { RequestWithUser } from '../categories/requestPost';
 import { UpdateRoleDto } from './dto/update-role.dto';
 
 @Injectable()
@@ -27,44 +25,23 @@ export class UsersService {
   ) { }
 
   async findAll(findAllUserDto: FindAllUserDto) {
-    const query = this.usersRepository.createQueryBuilder('user');
-    const page = findAllUserDto.page || 1;
-    const size = findAllUserDto.size || 10;
-    // console.log(query);
+
+    const _query = await this.usersRepository.createQueryBuilder('user')
+      .where('user.status = :status', { status: 1 })
+
     if (findAllUserDto.email) {
-      query.where('user.email LIKE :email', {
+      _query.andWhere('user.email LIKE :email', {
         email: `%${findAllUserDto.email}%`,
       });
     }
 
-    const [users, total] = await query
-      .andWhere('user.status = :status', { status: 1 })
-      .skip((Number(page) - 1) * Number(size))
-      .take(Number(size))
-      .getManyAndCount();
-    const next = Number(page) * Number(size) < total;
-    const last_page = Math.ceil(total / Number(size));
-
-    return {
-      data: users,
-      metadata: {
-        page,
-        size,
-        next,
-        total,
-        last_page,
-      },
-      message: 'Lấy danh sách người dùng thành công',
-      status: true,
-    };
+    return buildPaginateQueryFilter(_query, findAllUserDto)
   }
 
   async findOne(id: string) {
     const user = await this.usersRepository.findOne({
       where: { id },
-      relations: ['categories'],
     });
-    // this.categoriesService.findAll
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -74,6 +51,7 @@ export class UsersService {
   async getUserWithCategoriesAndTasks(id: string) {
     const user = await this.usersRepository
       .createQueryBuilder('user')
+      .where('user.deleted = :deleted', { deleted: false })
       .leftJoinAndSelect(
         'user.categories',
         'category',
@@ -95,18 +73,16 @@ export class UsersService {
 
     return {
       data: user,
-      message: 'Lấy thông tin người dùng thành công',
-      status: true,
     };
   }
 
   async resetPassword(id: string, resetPassDto: ResetPassDto) {
     const user = await this.findOne(id);
-    // const isPasswordValid = await bcrypt.compare(resetPassDto.oldPassword, user.password);
-    // if (!isPasswordValid) {
-    //   throw new UnauthorizedException('Mật khẩu cũ không đúng');
-    // }
-    user.password = await bcrypt.hash(resetPassDto.newPassword, 10);
+    const isPasswordValid = await _compare(resetPassDto.oldPassword, user.password);
+    if (!isPasswordValid) {
+      throw new BadRequestException('Mật khẩu cũ không đúng');
+    }
+    user.password = await _hash(resetPassDto.newPassword);
     await this.usersRepository.save(user);
     return { message: 'Reset Password Thành Công', status: true };
   }
@@ -120,19 +96,8 @@ export class UsersService {
 
   async updateRole(
     updateRole: UpdateRoleDto,
-    currentUser: {
-      userId: string;
-      email: string;
-      role?: 'user' | 'admin';
-    },
+    CurrUsers: User,
   ) {
-    console.log('Current user from JWT:', currentUser);
-
-    if (currentUser.role !== 'admin') {
-      throw new ForbiddenException(
-        'Bạn không có quyền thay đổi vai trò người dùng',
-      );
-    }
 
     const user = await this.usersRepository.findOne({
       where: { id: updateRole.id, status: 1 },
@@ -144,7 +109,7 @@ export class UsersService {
 
     user.role = updateRole.role;
     user.modified_date = new Date();
-    user.modified_by = currentUser.userId;
+    user.modified_by = CurrUsers.id;
 
     await this.usersRepository.save(user);
 

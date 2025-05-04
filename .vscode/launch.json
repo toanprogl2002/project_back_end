@@ -7,12 +7,11 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Launch Program",
-
-      "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}\\src\\modules\\auth\\guards\\jwt-auth.guard.ts",
-      "preLaunchTask": "tsc: build - tsconfig.json",
-      "outFiles": ["${workspaceFolder}/dist/**/*.js"]
+      "name": "Yarn Dev",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["dev"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
     }
   ]
 }

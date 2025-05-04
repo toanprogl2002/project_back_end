@@ -1,11 +1,9 @@
 import {
   Column,
-  Entity,
-  JoinColumn,
-  OneToMany,
+  Entity, OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
-  Relation,
+  Relation
 } from 'typeorm';
 
 import { Category } from './category.entity';
@@ -40,6 +38,6 @@ export class User extends BaseEntity {
   // In user.entity.ts
   // @OneToOne(() => Session, session => session.user)
   // sessions: Session[];
-  // @OneToOne(() => Session, (session) => session.user)
-  // session!: Relation<Session>;
+  @OneToOne(() => Session, (session) => session.user)
+  session!: Relation<Session>;
 }

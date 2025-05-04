@@ -9,25 +9,24 @@ import { DataSource, Repository } from 'typeorm';
 
 import { User } from '../../../database/entities/user.entity';
 
+import { AuthConfig } from '@/config';
+import { ROLE_TYPE_ENUM } from '@/constants';
+import { Session } from '@/database/entities';
+import { CacheService } from '@/system/cache';
+import { ValidationException } from '@/system/exceptions';
+import { uuid } from '@/utils';
+import ms from 'ms';
+import { IPayloadToken } from '../interfaces';
 import { ChangePassDto } from '../requests/change_pass.dto';
 import { LoginDto } from '../requests/login.dto';
 import { RegisterDto } from '../requests/register.dto';
-import { InjectRedis } from '@nestjs-modules/ioredis';
-import Redis from 'ioredis';
-import { AuthConfig } from '@/config';
-import { CacheService } from '@/system/cache';
-import { ValidationException } from '@/system/exceptions';
-import { ROLE_TYPE_ENUM } from '@/constants';
-import ms from 'ms';
 import {
   _compare,
   _hash,
+  generateAccessTokenWithRefreshToken,
   generateTokensPair,
   readOrCreateUserKey,
 } from '../utils';
-import { uuid } from '@/utils';
-import { IPayloadToken } from '../interfaces';
-import { Session } from '@/database/entities';
 
 @Injectable()
 export class AuthService {
@@ -139,7 +138,6 @@ export class AuthService {
     );
 
     await this._cache_service.set(payload.id, payload, time_expire);
-    // const test = this._cache_service.get(payload.id);
     await this._session_repo.save(
       this._session_repo.create({
         id: auth_id,
@@ -152,50 +150,50 @@ export class AuthService {
   }
 
 
-  // async refreshToken(token: string) {
-  //   try {
-  //     const decoded = this.jwtService.verify(token);
+  async refreshToken(token: string) {
+    try {
+      const session = await this._session_repo.findOne({
+        where: { refresh_token: token },
+      });
+      if (!session) throw new UnauthorizedException();
 
-  //     if (decoded.type !== 'refresh') {
-  //       throw new UnauthorizedException('Invalid token type');
-  //     }
+      const payload = await this._cache_service.get<IPayloadToken>(`auth:${session.id}`);
+      if (!payload) throw new UnauthorizedException();
 
-  //     const storedToken = await this.refreshRepository.findOne({
-  //       where: { userId: decoded.sub, token: token },
-  //     });
+      const { private_key, public_key } = readOrCreateUserKey(session.user_id);
+      const time_expire = this.getTokenExpireConfig();
 
-  //     if (!storedToken) {
-  //       throw new UnauthorizedException('Invalid refresh token');
-  //     }
+      const auth_id = uuid();
 
-  //     if (storedToken.expiresAt < new Date()) {
-  //       await this.refreshRepository.delete({ userId: decoded.sub });
-  //       throw new UnauthorizedException('Refresh token expired');
-  //     }
+      const new_payload: IPayloadToken = {
+        name: payload.name,
+        email: payload.email,
+        role: payload.role,
+        id: `auth:${auth_id}`,
+      };
+      const access_token = await generateAccessTokenWithRefreshToken(
+        new_payload,
+        private_key,
+        public_key,
+        time_expire,
+      );
 
-  //     // 5. Tạo access token mới
-  //     const user = await this.usersRepository.findOne({
-  //       where: { id: decoded.sub },
-  //     });
-  //     if (!user) {
-  //       throw new UnauthorizedException('User not found');
-  //     }
+      await this._cache_service.set(new_payload.id, new_payload, time_expire);
 
-  //     const payload = { email: user.email, sub: user.id };
-  //     return {
-  //       access_token: this.jwtService.sign(payload, { expiresIn: '60m' }),
-  //       expires_in: 3600,
-  //     };
-  //   } catch (error) {
-  //     // Xử lý các lỗi khác nhau
-  //     if (error.name === 'JsonWebTokenError') {
-  //       throw new UnauthorizedException('Invalid token');
-  //     } else if (error.name === 'TokenExpiredError') {
-  //       throw new UnauthorizedException('Token expired');
-  //     }
-  //     throw error;
-  //   }
-  // }
+      await this._session_repo.update(session.id, {
+        access_token: access_token,
+        refresh_token: token,
+      });
+
+      return { access_token };
+    }
+    catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw new UnauthorizedException('Phiên làm việc đã hết hạn');
+      }
+      throw new BadRequestException('Lỗi không xác định');
+    }
+  }
 
   async logout(session: Session) {
     await this._session_repo.update(
@@ -242,41 +240,15 @@ export class AuthService {
     }
     return { message: 'Đổi mật khẩu thành công' };
   }
-  // async changePassword(id: string, changePassDto: ChangePassDto) {
-  //   // Check if new password matches confirm password
-  //   if (changePassDto.newPassword !== changePassDto.confirmPassword) {
-  //     throw new Error('Mật khẩu mới và xác nhận mật khẩu không khớp');
-  //   }
 
-  //   const user = await this.usersRepository.findOne({ where: { id } });
-  //   // console.log(user)
-  //   if (!user) {
-  //     throw new Error('Người dùng không tồn tại');
-  //   }
 
-  //   // Verify old password
-  //   const isPasswordValid = await bcrypt.compare(
-  //     changePassDto.oldPassword,
-  //     user.password,
-  //   );
-  //   if (!isPasswordValid) {
-  //     throw new Error('Mật khẩu cũ không đúng');
-  //   }
-
-  //   // Hash and save new password
-  //   user.password = await bcrypt.hash(changePassDto.newPassword, 10);
-  //   await this.usersRepository.save(user);
-
-  //   return { message: 'Đổi mật khẩu thành công' };
-  // }
-
-  // async getUserById(id: string) {
-  //   const user = this.usersRepository.findOne({ where: { id } });
-  //   if (!user) {
-  //     throw new Error('Người dùng không tồn tại');
-  //   }
-  //   return user;
-  // }
+  async getUserById(id: string) {
+    const user = this._user_repo.findOne({ where: { id } });
+    if (!user) {
+      throw new Error('Người dùng không tồn tại');
+    }
+    return user;
+  }
 
   async getByUsername(name?: string) {
     return this._user_repo.findOne({ where: { name } });
